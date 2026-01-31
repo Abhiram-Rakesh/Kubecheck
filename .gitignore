@@ -1,0 +1,36 @@
+# Go
+cmd/kubecheck/kubecheck
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.sum
+
+# Haskell
+haskell/dist-newstyle/
+haskell/.ghc.environment.*
+haskell/cabal.project.local
+haskell/cabal.project.local~
+*.hi
+*.o
+*.prof
+*.aux
+*.hp
+*.eventlog
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+/tmp/
