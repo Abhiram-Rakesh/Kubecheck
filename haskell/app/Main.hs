@@ -6,7 +6,6 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BSL
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
-import Types
 import Validator
 
 -- | Main entry point: read JSON resource from stdin, validate, output JSON violations
