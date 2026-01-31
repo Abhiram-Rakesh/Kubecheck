@@ -5,6 +5,8 @@ module Types
     ( K8sResource(..)
     , Metadata(..)
     , Spec(..)
+    , PodTemplate(..)
+    , PodSpec(..)
     , Container(..)
     , SecurityContext(..)
     , Resources(..)
