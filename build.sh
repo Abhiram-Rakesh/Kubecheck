@@ -9,6 +9,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Save the project root directory
+PROJECT_ROOT=$(pwd)
+
 # Check prerequisites
 echo "📋 Checking prerequisites..."
 
@@ -49,7 +52,7 @@ echo -e "${GREEN}✓${NC} Cabal $CABAL_VERSION found"
 # Build Haskell rule engine
 echo ""
 echo "🔧 Building Haskell rule engine..."
-cd haskell
+cd "$PROJECT_ROOT/haskell"
 cabal update
 cabal build exe:kubecheck-rules
 HASKELL_BIN=$(cabal list-bin exe:kubecheck-rules)
@@ -58,7 +61,8 @@ echo -e "${GREEN}✓${NC} Haskell rule engine built"
 # Build Go CLI
 echo ""
 echo "🔧 Building Go CLI..."
-cd ../cmd/kubecheck
+cd "$PROJECT_ROOT/cmd/kubecheck"
+go mod tidy
 go build -o kubecheck
 echo -e "${GREEN}✓${NC} Go CLI built"
 
