@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 // processHelmChart renders a Helm chart and returns temporary YAML files
@@ -21,8 +20,6 @@ func processHelmChart(chartPath string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp directory: %w", err)
 	}
-
-	outputFile := filepath.Join(tmpDir, "rendered.yaml")
 
 	// Run helm template
 	cmd := exec.Command("helm", "template", chartPath, "--output-dir", tmpDir)
