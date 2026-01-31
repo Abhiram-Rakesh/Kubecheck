@@ -3,6 +3,8 @@
 module Validator
     ( validateResource
     , extractContainers
+    , K8sResource(..)   -- ← Re-exported
+    , Violation(..)     -- ← Re-exported
     ) where
 
 import Rules
@@ -11,9 +13,8 @@ import Types
 -- | Validate a Kubernetes resource and return all violations
 validateResource :: K8sResource -> [Violation]
 validateResource resource =
-    let containers = extractContainers resource
-        violations = concatMap validateContainer containers
-    in violations
+    let resourceContainers = extractContainers resource
+    in concatMap validateContainer resourceContainers
 
 -- | Extract containers from a Kubernetes resource
 -- Handles Deployment, StatefulSet, DaemonSet, ReplicaSet, Job, CronJob, Pod
@@ -40,3 +41,4 @@ validateContainer container =
            , checkRequireResources container
            , checkNoRootContainers container
            ]
+
