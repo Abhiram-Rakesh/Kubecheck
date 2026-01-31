@@ -2,7 +2,7 @@
 
 **Production-Grade Kubernetes Static Analysis CLI Tool**
 
-## 📊 Project Status
+## Project Status
 
 - **Architecture**: ✅ Complete
 - **Go Implementation**: ✅ Complete
@@ -11,7 +11,7 @@
 - **Documentation**: ✅ Complete
 - **Examples**: ✅ Complete
 
-## 🎯 Project Goals (All Met)
+## Project Goals (All Met)
 
 ✅ Local CLI tool for validating Kubernetes YAML files  
 ✅ Production best practices validation  
@@ -19,9 +19,9 @@
 ✅ System-wide installable  
 ✅ Supports files, directories, and Helm charts  
 ✅ Hybrid Go/Haskell architecture  
-✅ CI-friendly exit codes  
+✅ CI-friendly exit codes
 
-## 📦 Deliverables
+## Deliverables
 
 ### Code Components
 
@@ -63,7 +63,7 @@
 4. **multi-doc.yaml** - Multi-document YAML file
 5. **helm-chart/** - Complete Helm chart example
 
-## 🏗️ Architecture Highlights
+## Architecture Highlights
 
 ### Separation of Concerns
 
@@ -90,7 +90,7 @@
 - **Go**: System integration, excellent file I/O, great CLI support
 - **Haskell**: Type safety, pure functions, declarative rules, correctness guarantees
 
-## 🔍 Validation Rules Implemented
+## Validation Rules Implemented
 
 ### ERROR Level (Exit Code 2)
 
@@ -111,39 +111,43 @@
    - Enforces resource limits (CPU, memory)
    - Granular violations for each missing requirement
 
-## 🚀 Usage Modes
+## Usage Modes
 
 ### 1. Single File
+
 ```bash
 kubecheck deployment.yaml
 ```
 
 ### 2. Directory (Recursive)
+
 ```bash
 kubecheck k8s/
 ```
 
 ### 3. Helm Chart
+
 ```bash
 kubecheck ./charts/myapp/
 ```
 
 ### 4. Stdin
+
 ```bash
 helm template ./chart | kubecheck -
 ```
 
-## 📈 Exit Code Strategy
+## Exit Code Strategy
 
-| Severity | Exit Code | CI Behavior |
-|----------|-----------|-------------|
-| OK       | 0         | ✅ Pass     |
+| Severity | Exit Code | CI Behavior            |
+| -------- | --------- | ---------------------- |
+| OK       | 0         | ✅ Pass                |
 | WARN     | 1         | ⚠️ Pass (configurable) |
-| ERROR    | 2         | ❌ Fail     |
+| ERROR    | 2         | ❌ Fail                |
 
 Highest severity across all files determines final exit code.
 
-## 🎓 Educational Value
+## Educational Value
 
 This project demonstrates:
 
@@ -167,7 +171,7 @@ This project demonstrates:
    - Testable components
    - Extensible design
 
-## 🔧 Extensibility
+## Extensibility
 
 ### Adding New Rules
 
@@ -176,6 +180,7 @@ This project demonstrates:
 3. Rebuild and test
 
 Example:
+
 ```haskell
 checkHostNetwork :: Container -> [Violation]
 checkHostNetwork container =
@@ -189,6 +194,7 @@ checkHostNetwork container =
 ### Supported Resource Types
 
 Currently handles:
+
 - Deployments
 - StatefulSets
 - DaemonSets
@@ -199,44 +205,39 @@ Currently handles:
 
 Easily extensible to other types.
 
-## 📊 Project Statistics
+## Success Criteria (All Met)
 
-- **Go Files**: 5
-- **Haskell Files**: 4
-- **Lines of Code**: ~1000 (excluding comments)
-- **Rules Implemented**: 3 (easily extensible)
-- **Documentation Pages**: 6
-- **Example Manifests**: 5
+**Functional**
 
-## 🎯 Success Criteria (All Met)
-
-✅ **Functional**
 - Validates single files
 - Validates directories recursively
 - Validates Helm charts
 - Accepts stdin input
 - Correct exit codes
 
-✅ **Production-Ready**
+**Production-Ready**
+
 - System-wide installation
 - Clean uninstallation
 - No external dependencies after build
 - Works from any directory
 
-✅ **Well-Documented**
+**Well-Documented**
+
 - Comprehensive README
 - Architecture documentation
 - Contributing guide
 - Usage examples
 - Quickstart guide
 
-✅ **Best Practices**
+**Best Practices**
+
 - Go idiomatic code
 - Haskell type safety
 - Clear error messages
 - CI-friendly output
 
-## 🚧 Future Enhancements (Optional)
+## Future Enhancements (Optional)
 
 1. **More Rules**
    - Image pull policies
@@ -258,11 +259,11 @@ Easily extensible to other types.
    - Parallel validation
    - Caching for large repos
 
-## 📝 Installation Summary
+## Installation Summary
 
 ```bash
 # Clone repository
-git clone <repo-url>
+git clone https://github.com/Abhiram-Rakesh/Kubecheck.git
 cd kubecheck
 
 # Build and install
@@ -276,7 +277,7 @@ kubecheck k8s/
 ./uninstall.sh
 ```
 
-## 🎓 Learning Outcomes
+## Learning Outcomes
 
 By building and using this project, you will learn:
 
@@ -304,7 +305,7 @@ By building and using this project, you will learn:
    - Separation of concerns
    - Extensible design patterns
 
-## 📞 Support
+## Support
 
 - **Documentation**: See README.md, QUICKSTART.md, ARCHITECTURE.md
 - **Examples**: See EXAMPLES.md
@@ -314,7 +315,7 @@ By building and using this project, you will learn:
 
 ---
 
-## ✅ Final Checklist
+## Final Checklist
 
 - [x] Go CLI implementation
 - [x] Haskell rule engine implementation
@@ -328,7 +329,3 @@ By building and using this project, you will learn:
 - [x] LICENSE file
 - [x] .gitignore
 - [x] Test script
-
-**Status: 🎉 COMPLETE AND PRODUCTION-READY**
-
-This project successfully demonstrates a production-grade Kubernetes static analysis tool with a clean hybrid architecture, comprehensive documentation, and extensive examples. It's ready for real-world use in CI/CD pipelines, pre-commit hooks, and local development workflows.

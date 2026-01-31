@@ -90,8 +90,8 @@ name: Validate Kubernetes Manifests
 on:
   pull_request:
     paths:
-      - 'k8s/**'
-      - 'charts/**'
+      - "k8s/**"
+      - "charts/**"
   push:
     branches:
       - main
@@ -99,32 +99,32 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
-      
+          go-version: "1.21"
+
       - name: Setup Haskell
         uses: haskell/actions/setup@v2
         with:
-          ghc-version: '9.6.6'
-          cabal-version: '3.10'
-      
+          ghc-version: "9.6.6"
+          cabal-version: "3.10"
+
       - name: Build kubecheck
         run: |
           git clone https://github.com/your-org/kubecheck
           cd kubecheck
           chmod +x build.sh
           ./build.sh
-      
+
       - name: Validate manifests
         run: kubecheck k8s/
-      
+
       - name: Validate Helm charts
         run: |
           for chart in charts/*; do
@@ -161,7 +161,7 @@ validate:k8s:
 // Jenkinsfile
 pipeline {
     agent any
-    
+
     stages {
         stage('Validate K8s Manifests') {
             steps {
@@ -175,7 +175,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         failure {
             echo 'Kubernetes manifests validation failed!'
@@ -460,17 +460,17 @@ spec:
   template:
     spec:
       containers:
-      - name: validate
-        image: your-registry/kubecheck:latest
-        command: ["kubecheck", "/manifests"]
-        volumeMounts:
-        - name: manifests
-          mountPath: /manifests
+        - name: validate
+          image: your-registry/kubecheck:latest
+          command: ["kubecheck", "/manifests"]
+          volumeMounts:
+            - name: manifests
+              mountPath: /manifests
       restartPolicy: Never
       volumes:
-      - name: manifests
-        configMap:
-          name: k8s-manifests
+        - name: manifests
+          configMap:
+            name: k8s-manifests
 ```
 
 ### Terraform Integration

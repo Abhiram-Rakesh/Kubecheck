@@ -2,11 +2,11 @@
 
 Get up and running with `kubecheck` in 5 minutes.
 
-## ⚡ Quick Install
+## Quick Install
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/Abhiram-Rakesh/Kubecheck.git
 cd kubecheck
 
 # Make scripts executable
@@ -18,7 +18,7 @@ chmod +x *.sh
 
 **Prerequisites:** Go ≥ 1.21, GHC 9.6.x (installed via ghcup)
 
-## 🎯 Basic Usage
+## Basic Usage
 
 ### Validate a Single File
 
@@ -27,6 +27,7 @@ kubecheck examples/deployment.yaml
 ```
 
 **Output:**
+
 ```
 ERROR: examples/deployment.yaml
   Resource: Deployment/nginx-deployment
@@ -71,17 +72,17 @@ Or:
 kubectl get deployment nginx -o yaml | kubecheck -
 ```
 
-## 📋 Understanding Exit Codes
+## Understanding Exit Codes
 
-| Code | Meaning | Description |
-|------|---------|-------------|
-| 0 | OK | All checks passed |
-| 1 | WARN | Warnings found, but no errors |
-| 2 | ERROR | Errors found (fails CI builds) |
+| Code | Meaning | Description                    |
+| ---- | ------- | ------------------------------ |
+| 0    | OK      | All checks passed              |
+| 1    | WARN    | Warnings found, but no errors  |
+| 2    | ERROR   | Errors found (fails CI builds) |
 
 The CLI exits with the **highest severity** found across all files.
 
-## 🔍 Verbose Mode
+## Verbose Mode
 
 Get detailed output for all files, including those that pass:
 
@@ -89,22 +90,24 @@ Get detailed output for all files, including those that pass:
 kubecheck -v k8s/
 ```
 
-## 🚨 What kubecheck Checks
+## What kubecheck Checks
 
-### ❌ Errors (Exit Code 2)
+### Errors (Exit Code 2)
 
 1. **No `:latest` image tags**
+
    ```yaml
    # ❌ Bad
    image: nginx:latest
    image: nginx
-   
+
    # ✅ Good
    image: nginx:1.21
    image: nginx:1.21.0-alpine
    ```
 
 2. **Containers must not run as root**
+
    ```yaml
    # ❌ Bad
    spec:
@@ -112,7 +115,7 @@ kubecheck -v k8s/
      - name: app
        image: nginx:1.21
        # Missing securityContext
-   
+
    # ✅ Good
    spec:
      containers:
@@ -126,6 +129,7 @@ kubecheck -v k8s/
 ### ⚠️ Warnings (Exit Code 1)
 
 1. **Resource requests and limits should be set**
+
    ```yaml
    # ⚠️ Warning
    spec:
@@ -133,7 +137,7 @@ kubecheck -v k8s/
      - name: app
        image: nginx:1.21
        # Missing resources
-   
+
    # ✅ Good
    spec:
      containers:
@@ -148,11 +152,12 @@ kubecheck -v k8s/
            memory: "512Mi"
    ```
 
-## 🎓 Common Workflows
+## Common Workflows
 
 ### Pre-Commit Hook
 
 `.git/hooks/pre-commit`:
+
 ```bash
 #!/bin/bash
 kubecheck k8s/
@@ -161,6 +166,7 @@ kubecheck k8s/
 ### CI/CD Pipeline
 
 **GitHub Actions:**
+
 ```yaml
 name: Validate Kubernetes Manifests
 
@@ -171,18 +177,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup kubecheck
         run: |
           git clone https://github.com/your-org/kubecheck
           cd kubecheck
           ./build.sh
-      
+
       - name: Validate manifests
         run: kubecheck k8s/
 ```
 
 **GitLab CI:**
+
 ```yaml
 validate:
   stage: test
@@ -210,7 +217,7 @@ kubecheck ./charts/myapp/
 helm template ./charts/myapp -f prod-values.yaml | kubecheck -
 ```
 
-## 📦 Example Manifests
+## Example Manifests
 
 The `examples/` directory contains sample manifests:
 
@@ -229,11 +236,12 @@ kubecheck examples/multi-doc.yaml
 kubecheck examples/helm-chart/
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### "kubecheck: command not found"
 
 Make sure `/usr/local/bin` is in your `PATH`:
+
 ```bash
 export PATH="/usr/local/bin:$PATH"
 ```
@@ -243,6 +251,7 @@ Or add to `~/.bashrc` or `~/.zshrc`.
 ### "helm template failed"
 
 Ensure Helm is installed:
+
 ```bash
 brew install helm  # macOS
 # or
@@ -252,17 +261,18 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 ### "Failed to parse JSON input"
 
 The Haskell rule engine expects valid Kubernetes YAML. Check that your manifests have:
+
 - `apiVersion`
 - `kind`
 - `metadata`
 
-## 🎯 Next Steps
+## Next Steps
 
 1. **Read the [Contributing Guide](CONTRIBUTING.md)** to add your own rules
 2. **Explore the [Architecture](ARCHITECTURE.md)** to understand how it works
 3. **Check the [README](README.md)** for comprehensive documentation
 
-## 🗑️ Uninstall
+## Uninstall
 
 ```bash
 ./uninstall.sh
@@ -271,5 +281,3 @@ The Haskell rule engine expects valid Kubernetes YAML. Check that your manifests
 Removes all installed binaries and libraries.
 
 ---
-
-**Happy validating!** 🚀

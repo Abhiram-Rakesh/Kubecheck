@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to kubecheck! This guide will help you get started.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 kubecheck uses a hybrid architecture:
 
@@ -26,7 +26,7 @@ kubecheck uses a hybrid architecture:
 └──────────────────────────────────────────┘
 ```
 
-## 🚀 Development Setup
+## Development Setup
 
 ### Prerequisites
 
@@ -70,7 +70,7 @@ cd ..
 ./cmd/kubecheck/kubecheck examples/deployment.yaml
 ```
 
-## 📝 Adding New Rules
+## Adding New Rules
 
 New validation rules should be added to the Haskell rule engine for type safety and functional correctness.
 
@@ -88,7 +88,7 @@ checkHostNetwork container =
         Just True -> [Violation SeverityError msg "no-host-network"]
         _         -> []
   where
-    msg = "Container '" <> containerName container 
+    msg = "Container '" <> containerName container
           <> "' uses host network (hostNetwork: true)"
 ```
 
@@ -133,8 +133,8 @@ metadata:
 spec:
   hostNetwork: true
   containers:
-  - name: app
-    image: nginx:1.21
+    - name: app
+      image: nginx:1.21
 ```
 
 Test it:
@@ -144,7 +144,7 @@ Test it:
 kubecheck examples/host-network.yaml
 ```
 
-## 🧪 Testing
+## Testing
 
 ### Go Tests
 
@@ -176,7 +176,7 @@ kubecheck examples/helm-chart/
 cat examples/pod.yaml | kubecheck -
 ```
 
-## 📋 Code Style
+## Code Style
 
 ### Go Code Style
 
@@ -193,7 +193,7 @@ cat examples/pod.yaml | kubecheck -
 - Prefer pure functions over IO
 - Use meaningful names (no single-letter variables except in small scopes)
 
-## 🔄 Pull Request Process
+## Pull Request Process
 
 1. **Fork the repository**
 2. **Create a feature branch**
@@ -219,7 +219,7 @@ cat examples/pod.yaml | kubecheck -
    git push origin feature/my-new-rule
    ```
 
-## 📚 Rule Design Guidelines
+## Rule Design Guidelines
 
 ### Severity Levels
 
@@ -238,6 +238,7 @@ cat examples/pod.yaml | kubecheck -
 ### Rule Characteristics
 
 Good rules should be:
+
 1. **Deterministic** - Same input always produces same output
 2. **Actionable** - Clear guidance on how to fix
 3. **Documented** - Include rationale in comments
@@ -260,7 +261,7 @@ checkRuleName container =
     condition = -- Your validation logic
 ```
 
-## 🐛 Debugging
+## Debugging
 
 ### Debug Go CLI
 
@@ -290,18 +291,18 @@ echo '{"apiVersion":"v1","kind":"Pod",...}' | cabal run kubecheck-rules
    - Run `cabal clean && cabal build`
    - Ensure GHC version is 9.6.x
 
-## 📖 Resources
+## Resources
 
 - [Kubernetes Best Practices](https://kubernetes.io/docs/concepts/configuration/overview/)
 - [NSA Kubernetes Hardening Guide](https://www.nsa.gov/Press-Room/News-Highlights/Article/Article/2716980/)
 - [CIS Kubernetes Benchmark](https://www.cisecurity.org/benchmark/kubernetes)
 - [Haskell Style Guide](https://kowainik.github.io/posts/2019-02-06-style-guide)
 
-## 💬 Community
+## Community
 
 - GitHub Issues: Bug reports and feature requests
 - GitHub Discussions: Questions and ideas
 
 ---
 
-**Thank you for contributing to kubecheck!** 🚀
+**Thank you for contributing to kubecheck!**
