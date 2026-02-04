@@ -1,129 +1,119 @@
 # Contributing to kubecheck
 
-Thank you for your interest in contributing to kubecheck! This guide will help you get started.
+Thank you for your interest in contributing! This guide will help you get started.
 
-## Architecture Overview
+## 🏗️ Architecture Overview
 
-kubecheck uses a hybrid architecture:
+kubecheck is built entirely in Go with a YAML-configurable rule system:
 
 ```
 ┌──────────────────────────────────────────┐
 │  Go CLI (cmd/kubecheck)                  │
-│  - Argument parsing                      │
-│  - File discovery (YAML, directories)    │
-│  - Helm template rendering               │
-│  - JSON serialization                    │
-│  - Report formatting                     │
-└────────────┬─────────────────────────────┘
-             │ JSON over stdin/stdout
-             ▼
-┌──────────────────────────────────────────┐
-│  Haskell Rule Engine (haskell/)          │
-│  - Type-safe resource parsing            │
-│  - Pure functional validation            │
-│  - Declarative rule definitions          │
-│  - Violation generation                  │
+│  - Argument parsing & file discovery     │
+│  - YAML config loading                   │
+│  - Rule engine evaluation                │
+│  - Output formatting                     │
 └──────────────────────────────────────────┘
 ```
 
-## Development Setup
+## 🚀 Development Setup
 
 ### Prerequisites
 
 - Go ≥ 1.21
-- GHC 9.6.x (via ghcup)
-- Cabal ≥ 3.0
 - Helm (optional, for Helm chart testing)
 
-### Installing Dependencies
+### Local Development
 
 ```bash
-# Install ghcup (Haskell toolchain manager)
-curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+# Clone the repository
+git clone <your-repo>
+cd kubecheck
 
-# Install GHC and Cabal
-ghcup install ghc 9.6.6
-ghcup install cabal
-ghcup set ghc 9.6.6
-
-# Verify installations
-go version
-ghc --version
-cabal --version
-```
-
-### Local Development Build
-
-```bash
-# Build Go CLI
+# Build locally
 cd cmd/kubecheck
 go build -o kubecheck
-cd ../..
 
-# Build Haskell rule engine
-cd haskell
-cabal update
-cabal build
-cd ..
-
-# Test locally (without installing)
-./cmd/kubecheck/kubecheck examples/deployment.yaml
+# Test locally
+./kubecheck ../../examples/deployment.yaml
 ```
 
-## Adding New Rules
+## 📝 Adding New Validation Rules
 
-New validation rules should be added to the Haskell rule engine for type safety and functional correctness.
+### Option 1: YAML Configuration (Recommended)
 
-### Step 1: Define the Rule
+For most use cases, you can add rules via YAML configuration without touching code:
 
-Edit `haskell/src/Rules.hs`:
-
-```haskell
--- | Rule: Check for host network usage
--- Severity: ERROR
--- Rationale: Host network bypasses network policies
-checkHostNetwork :: Container -> [Violation]
-checkHostNetwork container =
-    case containerHostNetwork container of
-        Just True -> [Violation SeverityError msg "no-host-network"]
-        _         -> []
-  where
-    msg = "Container '" <> containerName container
-          <> "' uses host network (hostNetwork: true)"
+**1. Edit `kubecheck.yaml`:**
+```yaml
+rules:
+  - name: my-custom-rule
+    description: Description of what this checks
+    severity: ERROR  # or WARN
+    type: security   # or image, resources, etc.
+    conditions:
+      - existing_condition_type
+    message: "Container '{container}' violates custom rule"
+    help: "How to fix this issue"
 ```
 
-### Step 2: Apply the Rule
-
-Edit `haskell/src/Validator.hs`:
-
-```haskell
-validateContainer :: Container -> [Violation]
-validateContainer container =
-    concat [ checkNoLatestImage container
-           , checkRequireResources container
-           , checkNoRootContainers container
-           , checkHostNetwork container  -- Add your new rule
-           ]
+**2. Test it:**
+```bash
+kubecheck --config kubecheck.yaml examples/deployment.yaml
 ```
 
-### Step 3: Update Types (if needed)
+### Option 2: New Condition Type (Code Change)
 
-If your rule requires new fields, update `haskell/src/Types.hs`:
+If you need a new condition type, you'll need to modify Go code:
 
-```haskell
-data Container = Container
-    { containerName           :: Text
-    , containerImage          :: Text
-    , containerSecurityContext :: Maybe SecurityContext
-    , containerResources      :: Maybe Resources
-    , containerHostNetwork    :: Maybe Bool  -- Add new field
-    } deriving (Eq, Show, Generic)
+**1. Add condition check function** in `cmd/kubecheck/rule-engine.go`:
+```go
+// checkHostNetwork checks if container uses host network
+func checkHostNetwork(c Container) bool {
+    // Your validation logic here
+    return c.HostNetwork != nil && *c.HostNetwork
+}
 ```
 
-### Step 4: Test Your Rule
+**2. Add to condition switch** in `checkCondition()`:
+```go
+func (re *RuleEngine) checkCondition(condition string, container Container) bool {
+    // ... existing code ...
+    
+    switch conditionType {
+    // ... existing cases ...
+    case "uses_host_network":
+        return checkHostNetwork(container)
+    default:
+        return false
+    }
+}
+```
 
-Create a test case in `examples/`:
+**3. Update Container struct if needed** (add new fields):
+```go
+type Container struct {
+    Name            string
+    Image           string
+    Resources       *Resources
+    SecurityContext *SecurityContext
+    HostNetwork     *bool  // Add new field
+}
+```
 
+**4. Update parser** in `parseContainers()` to extract new field:
+```go
+if hostNet, ok := containerMap["hostNetwork"].(bool); ok {
+    container.HostNetwork = &hostNet
+}
+```
+
+**5. Document the new condition** in `CONFIG.md`:
+```markdown
+- `uses_host_network` - Container uses host network
+```
+
+**6. Create test case** in `examples/`:
 ```yaml
 # examples/host-network.yaml
 apiVersion: v1
@@ -133,35 +123,26 @@ metadata:
 spec:
   hostNetwork: true
   containers:
-    - name: app
-      image: nginx:1.21
+  - name: app
+    image: nginx:1.21
 ```
 
-Test it:
-
+**7. Test:**
 ```bash
-./build.sh
-kubecheck examples/host-network.yaml
+cd cmd/kubecheck
+go build
+./kubecheck ../../examples/host-network.yaml
 ```
 
-## Testing
+## 🧪 Testing
 
-### Go Tests
-
+### Run Tests
 ```bash
 cd cmd/kubecheck
 go test -v ./...
 ```
 
-### Haskell Tests
-
-```bash
-cd haskell
-cabal test
-```
-
-### Integration Tests
-
+### Manual Testing
 ```bash
 # Test single file
 kubecheck examples/deployment.yaml
@@ -174,9 +155,12 @@ kubecheck examples/helm-chart/
 
 # Test stdin
 cat examples/pod.yaml | kubecheck -
+
+# Test custom config
+kubecheck --config custom-rules.yaml examples/
 ```
 
-## Code Style
+## 📋 Code Style
 
 ### Go Code Style
 
@@ -184,125 +168,165 @@ cat examples/pod.yaml | kubecheck -
 - Use `gofmt` for formatting
 - Run `go vet` before committing
 - Keep functions focused and testable
+- Add comments for exported functions
 
-### Haskell Code Style
+**Example:**
+```go
+// checkImageTag validates the container image tag
+func checkImageTag(image, tag string) bool {
+    if !strings.Contains(image, ":") {
+        return tag == "latest"
+    }
+    parts := strings.Split(image, ":")
+    return len(parts) == 2 && parts[1] == tag
+}
+```
 
-- Use Haskell2010 standard
-- Enable `-Wall` and treat warnings as errors
-- Use type signatures for all top-level functions
-- Prefer pure functions over IO
-- Use meaningful names (no single-letter variables except in small scopes)
+### YAML Configuration Style
 
-## Pull Request Process
+```yaml
+rules:
+  - name: kebab-case-name
+    description: Clear, concise description
+    severity: ERROR  # or WARN
+    type: category
+    conditions:
+      - condition_one
+      - condition_two
+    message: "Clear error message with {container} placeholder"
+    help: "Actionable fix suggestion"
+```
+
+## 🔄 Pull Request Process
 
 1. **Fork the repository**
+
 2. **Create a feature branch**
    ```bash
-   git checkout -b feature/my-new-rule
-   ```
-3. **Make your changes**
-   - Add your rule to `haskell/src/Rules.hs`
-   - Update `haskell/src/Validator.hs`
-   - Add test cases to `examples/`
-   - Update documentation if needed
-4. **Test thoroughly**
-   ```bash
-   ./build.sh
-   kubecheck examples/
-   ```
-5. **Commit with clear messages**
-   ```bash
-   git commit -m "feat: add host network validation rule"
-   ```
-6. **Push and create PR**
-   ```bash
-   git push origin feature/my-new-rule
+   git checkout -b feature/my-new-condition
    ```
 
-## Rule Design Guidelines
+3. **Make your changes**
+   - Add condition to `rule-engine.go`
+   - Update documentation in `CONFIG.md`
+   - Add test cases to `examples/`
+
+4. **Test thoroughly**
+   ```bash
+   go build
+   ./kubecheck examples/
+   ```
+
+5. **Commit with clear messages**
+   ```bash
+   git commit -m "feat: add host network validation condition"
+   ```
+
+6. **Push and create PR**
+   ```bash
+   git push origin feature/my-new-condition
+   ```
+
+## 📚 Condition Design Guidelines
 
 ### Severity Levels
 
-- **ERROR**: Production-critical violations
-  - Security issues (running as root, privileged containers)
-  - Non-deterministic configurations (`:latest` tags)
-  - Critical misconfigurations
+**ERROR** - Production-critical violations
+- Security issues (root containers, privileged mode)
+- Non-deterministic configurations (`:latest` tags)
+- Critical misconfigurations
 
-- **WARN**: Best practice violations
-  - Missing resource limits
-  - Missing probes
-  - Suboptimal configurations
+**WARN** - Best practice violations
+- Missing resource limits
+- Missing health probes
+- Suboptimal configurations
 
-- **OK**: All checks passed
+### Condition Characteristics
 
-### Rule Characteristics
-
-Good rules should be:
-
-1. **Deterministic** - Same input always produces same output
-2. **Actionable** - Clear guidance on how to fix
-3. **Documented** - Include rationale in comments
+Good conditions should be:
+1. **Specific** - Check one thing clearly
+2. **Deterministic** - Same input = same result
+3. **Documented** - Clear description and help text
 4. **Testable** - Easy to create test cases
-5. **Focused** - One rule checks one thing
+5. **Composable** - Works well with other conditions
 
-### Rule Template
+### Condition Naming
 
-```haskell
--- | Rule: <Brief description>
--- Severity: <ERROR|WARN>
--- Rationale: <Why this rule exists>
-checkRuleName :: Container -> [Violation]
-checkRuleName container =
-    if condition
-        then [Violation severity message "rule-name"]
-        else []
-  where
-    message = "Clear, actionable error message"
-    condition = -- Your validation logic
+Use descriptive names in snake_case:
+- ✅ `missing_cpu_requests`
+- ✅ `image_tag_equals:latest`
+- ✅ `run_as_user_zero`
+- ❌ `bad_cpu`
+- ❌ `check1`
+
+### Message Templates
+
+Use `{container}` placeholder for container name:
+```yaml
+message: "Container '{container}' uses latest tag"
 ```
 
-## Debugging
+Provide actionable help:
+```yaml
+help: "use a specific version like nginx:1.21.0"
+```
 
-### Debug Go CLI
+## 🐛 Debugging
+
+### Debug Go Code
 
 ```bash
 cd cmd/kubecheck
-go run . -v examples/deployment.yaml
+go run . -v ../../examples/deployment.yaml
 ```
 
-### Debug Haskell Rule Engine
+### Debug Config Loading
 
 ```bash
-cd haskell
-echo '{"apiVersion":"v1","kind":"Pod",...}' | cabal run kubecheck-rules
+# See which config is loaded
+kubecheck -v deployment.yaml
+
+# Test custom config
+kubecheck --config test-config.yaml -v deployment.yaml
 ```
 
 ### Common Issues
 
-1. **Rule engine not found**
-   - Ensure `/usr/local/lib/kubecheck/kubecheck-rules` exists
-   - Re-run `./build.sh`
+1. **Condition not triggering**
+   - Check condition name matches exactly
+   - Verify field is being parsed correctly
+   - Add debug logging: `fmt.Printf("Debug: %+v\n", container)`
 
-2. **JSON parsing errors**
-   - Verify JSON structure matches `Types.hs` definitions
-   - Check that all required fields are present
+2. **Config not loading**
+   - Verify YAML syntax: `yamllint kubecheck.yaml`
+   - Check file location
+   - Use `-v` flag to see which config is loaded
 
-3. **Haskell compilation errors**
-   - Run `cabal clean && cabal build`
-   - Ensure GHC version is 9.6.x
+3. **Parser not extracting field**
+   - Check YAML structure matches your code
+   - Verify type assertions are correct
+   - Test with simple example first
 
-## Resources
+## 📖 Resources
 
-- [Kubernetes Best Practices](https://kubernetes.io/docs/concepts/configuration/overview/)
-- [NSA Kubernetes Hardening Guide](https://www.nsa.gov/Press-Room/News-Highlights/Article/Article/2716980/)
-- [CIS Kubernetes Benchmark](https://www.cisecurity.org/benchmark/kubernetes)
-- [Haskell Style Guide](https://kowainik.github.io/posts/2019-02-06-style-guide)
+- [Kubernetes API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/)
+- [Production Best Practices](https://learnk8s.io/production-best-practices)
+- [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
 
-## Community
+## 💬 Community
 
 - GitHub Issues: Bug reports and feature requests
 - GitHub Discussions: Questions and ideas
 
 ---
 
-**Thank you for contributing to kubecheck!**
+**Thank you for contributing to kubecheck!** 🚀
+
+### Quick Reference
+
+**Add YAML rule:** Edit `kubecheck.yaml`  
+**Add condition type:** Edit `rule-engine.go` → `checkCondition()`  
+**Add field to Container:** Edit `Container` struct → Update parser  
+**Test changes:** `go build && ./kubecheck examples/`  
+**Format code:** `gofmt -w .`  
+**Run tests:** `go test -v ./...`

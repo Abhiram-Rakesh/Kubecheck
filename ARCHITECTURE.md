@@ -2,25 +2,23 @@
 
 ## System Overview
 
-`kubecheck` is a production-grade static analysis tool for Kubernetes manifests, designed with a clear separation of concerns between orchestration (Go) and validation logic (Haskell).
+`kubecheck` is a production-grade static analysis tool for Kubernetes manifests, built entirely in Go with a YAML-configurable rule system.
 
 ## Design Principles
 
-### 1. Separation of Concerns
+### 1. Simplicity First
 
-**Go Layer (Orchestration)**
-- Handles system integration (file I/O, process execution)
-- Parses command-line arguments
-- Discovers and reads YAML files
-- Integrates with Helm for chart rendering
-- Formats output for human consumption
-- Manages process exit codes
+**Pure Go Implementation**
+- No complex language dependencies (removed Haskell)
+- Easy to install and distribute
+- Fast compilation and execution
+- Cross-platform compatibility
 
-**Haskell Layer (Validation)**
-- Defines validation rules in a pure, functional style
-- Provides strong type safety for Kubernetes resources
-- Ensures deterministic validation logic
-- Maintains rule extensibility through composition
+**YAML-Based Configuration**
+- Declarative rule definitions
+- No code changes needed for new rules
+- Organization-specific customization
+- Version-controlled policy
 
 ### 2. Data Flow
 
@@ -29,46 +27,40 @@ User Input
     ↓
 Go CLI (main.go)
     ↓
+Config Loader (config.go) → Load rules from YAML or defaults
+    ↓
 File Discovery (parser.go, helm.go)
     ↓
 YAML Parsing → K8sResource structs
     ↓
-JSON Serialization
+Rule Engine (rule-engine.go)
     ↓
-Haskell Rule Engine (stdin)
+Condition Evaluation → Match against containers
     ↓
-Rule Application (Rules.hs)
+Violation List
     ↓
-Violation List (JSON stdout)
+Reporter (reporter.go)
     ↓
-Go Reporter (reporter.go)
-    ↓
-Formatted Output
+Formatted Output (with colors & box-drawing)
     ↓
 Exit Code (0, 1, 2)
 ```
 
-### 3. Why Haskell for Rules?
+### 3. Why Pure Go?
 
-**Type Safety**
-- Compile-time guarantees prevent runtime errors
-- Impossible to apply wrong rule to wrong resource type
-- Type-driven development catches bugs early
+**Advantages**
+- ✅ Single binary distribution
+- ✅ No runtime dependencies
+- ✅ Easy CI/CD integration
+- ✅ Fast startup time
+- ✅ Simple installation (just Go)
+- ✅ Cross-platform builds
 
-**Pure Functions**
-- No side effects in validation logic
-- Deterministic behavior (same input → same output)
-- Easy to test and reason about
-
-**Declarative Style**
-- Rules read like specifications
-- Easy to audit and review
-- Natural fit for policy-as-code
-
-**Composability**
-- Rules are just functions that return violations
-- New rules compose naturally with existing ones
-- No complex frameworks or inheritance hierarchies
+**Previous Haskell Approach**
+- ❌ Required GHC + Cabal installation
+- ❌ Complex build process
+- ❌ Difficult for non-Haskell developers
+- ❌ Slower builds
 
 ## Component Details
 
@@ -76,10 +68,24 @@ Exit Code (0, 1, 2)
 
 #### `main.go`
 - Entry point for CLI
-- Parses flags: `-v` for verbose
+- Parses flags: `-v` for verbose, `--config` for custom config
 - Determines input type (file, directory, Helm chart, stdin)
+- Loads rule configuration
 - Orchestrates validation pipeline
 - Manages exit codes based on severity
+
+#### `config.go`
+- Loads YAML configuration files
+- Provides default built-in rules
+- Searches multiple config locations
+- Validates config structure
+
+#### `rule-engine.go`
+- Evaluates YAML-defined rules
+- Extracts containers from resources
+- Checks conditions against containers
+- Generates violations with messages
+- Supports extensible condition system
 
 #### `parser.go`
 - Reads YAML files
@@ -94,133 +100,114 @@ Exit Code (0, 1, 2)
 - Returns file paths for validation
 
 #### `reporter.go`
-- Formats validation results
+- Formats validation results with colors and box-drawing
 - Tracks statistics (OK, WARN, ERROR counts)
-- Provides verbose and non-verbose output modes
-- Prints summary at the end
+- Provides two output modes:
+  - **Single file**: Detailed boxes with inline help
+  - **Directory**: Compact tree format
+- Prints styled summary
 
-#### `engine.go`
-- Calls the Haskell rule engine binary
-- Pipes JSON via stdin
-- Reads JSON violations from stdout
-- Handles error cases
+## Configuration System
 
-### Haskell Components
+### Config File Structure
 
-#### `Types.hs`
-- Defines core data types
-- `K8sResource`: Top-level Kubernetes resource
-- `Container`: Container specification
-- `SecurityContext`, `Resources`: Nested configurations
-- `Violation`: Rule violation with severity and message
-- Aeson instances for JSON serialization
+```yaml
+rules:
+  - name: string           # Unique identifier
+    description: string    # Human-readable description
+    severity: ERROR|WARN   # Violation severity
+    type: string          # Category (image, resources, security)
+    conditions: []string  # List of conditions to check
+    message: string       # Error message (supports {container} placeholder)
+    help: string          # Optional remediation guidance
+```
 
-#### `Rules.hs`
-- Contains individual validation rules
-- Each rule is a pure function: `Container -> [Violation]`
-- Currently implements:
-  - `checkNoLatestImage`: Disallow `:latest` tags
-  - `checkRequireResources`: Require resource requests/limits
-  - `checkNoRootContainers`: Enforce non-root containers
+### Condition Evaluation
 
-#### `Validator.hs`
-- Applies all rules to a resource
-- Extracts containers from various resource types
-- Handles Deployments, Pods, StatefulSets, etc.
-- Composes rule results into final violation list
+Conditions are strings in the format `condition_type:value`.
 
-#### `app/Main.hs`
-- CLI wrapper for the rule engine
-- Reads JSON from stdin
-- Decodes into `K8sResource`
-- Validates and encodes violations to JSON
-- Writes to stdout
+**Evaluation Flow:**
+1. Parse condition string
+2. Extract condition type and optional value
+3. Match against switch statement
+4. Execute condition-specific check function
+5. Return boolean result
 
-## Inter-Process Communication
+**Example:**
+```yaml
+conditions:
+  - image_tag_equals:latest  # condition_type:value
+  - missing_cpu_requests     # condition_type (no value)
+```
 
-### JSON Schema
+### Extensibility
 
-**Input (Go → Haskell):**
-```json
-{
-  "apiVersion": "apps/v1",
-  "kind": "Deployment",
-  "metadata": {
-    "name": "nginx",
-    "namespace": "default"
-  },
-  "spec": {
-    "template": {
-      "spec": {
-        "containers": [
-          {
-            "name": "nginx",
-            "image": "nginx:latest",
-            "securityContext": {
-              "runAsNonRoot": false
-            }
-          }
-        ]
-      }
-    }
-  }
+Adding new conditions:
+
+1. **Add condition check function** in `rule-engine.go`:
+   ```go
+   func checkNewCondition(c Container) bool {
+       // Your validation logic
+       return false
+   }
+   ```
+
+2. **Add case to switch statement**:
+   ```go
+   case "new_condition":
+       return checkNewCondition(container)
+   ```
+
+3. **Use in configuration**:
+   ```yaml
+   conditions:
+     - new_condition
+   ```
+
+## Data Structures
+
+### K8sResource
+
+```go
+type K8sResource struct {
+    APIVersion string
+    Kind       string
+    Metadata   map[string]interface{}
+    Spec       map[string]interface{}
 }
 ```
 
-**Output (Haskell → Go):**
-```json
-[
-  {
-    "severity": "ERROR",
-    "message": "Container 'nginx' uses 'latest' image tag",
-    "rule": "no-latest-image"
-  },
-  {
-    "severity": "ERROR",
-    "message": "Container 'nginx' has runAsNonRoot set to false",
-    "rule": "no-root-containers"
-  }
-]
+Flexible structure using `map[string]interface{}` to handle various Kubernetes resource types.
+
+### Container
+
+```go
+type Container struct {
+    Name            string
+    Image           string
+    Resources       *Resources
+    SecurityContext *SecurityContext
+}
 ```
 
-## Extension Points
+Parsed from resource spec for validation.
 
-### Adding New Rules
+### Violation
 
-1. **Define in `Rules.hs`:**
-   ```haskell
-   checkNewRule :: Container -> [Violation]
-   checkNewRule container = 
-       if condition
-           then [Violation severity message "rule-name"]
-           else []
-   ```
-
-2. **Apply in `Validator.hs`:**
-   ```haskell
-   validateContainer container =
-       concat [ ...
-              , checkNewRule container
-              ]
-   ```
-
-3. **Update types if needed** in `Types.hs`
-
-### Adding New Resource Types
-
-1. **Extend `Spec` type** in `Types.hs`
-2. **Update `extractContainers`** in `Validator.hs`
-3. Test with example manifests
+```go
+type Violation struct {
+    Severity string  // ERROR or WARN
+    Message  string  // Error message
+    Rule     string  // Rule identifier
+}
+```
 
 ## Build System
 
 ### Development Build
 ```bash
-# Go CLI
-cd cmd/kubecheck && go build
-
-# Haskell engine
-cd haskell && cabal build
+cd cmd/kubecheck
+go build
 ```
 
 ### Production Build
@@ -229,25 +216,24 @@ cd haskell && cabal build
 ```
 
 This script:
-1. Checks prerequisites (Go, GHC, Cabal)
-2. Builds Haskell rule engine
-3. Builds Go CLI
-4. Installs both to system paths:
-   - `/usr/local/bin/kubecheck`
-   - `/usr/local/lib/kubecheck/kubecheck-rules`
+1. Checks prerequisites (Go ≥ 1.21)
+2. Builds Go CLI
+3. Installs to `/usr/local/bin/kubecheck`
 
 ### Uninstallation
 ```bash
 ./uninstall.sh
 ```
 
-Removes all installed artifacts.
+Removes installed binary.
 
 ## Testing Strategy
 
 ### Unit Tests
-- **Go**: Test YAML parsing, file discovery
-- **Haskell**: Test individual rules, type conversions
+- Test YAML parsing
+- Test file discovery
+- Test condition evaluation
+- Test config loading
 
 ### Integration Tests
 - End-to-end validation of example manifests
@@ -266,14 +252,14 @@ Removes all installed artifacts.
 ## Performance Considerations
 
 ### File Processing
-- Recursive directory scanning is efficient for typical K8s repos
-- Multi-document YAML is streamed to avoid memory issues
-- Helm rendering uses temp files to avoid memory pressure
+- Recursive directory scanning is efficient
+- Multi-document YAML is streamed
+- Helm rendering uses temp files
 
-### Rule Engine
-- Pure functions enable parallelization (future enhancement)
-- Type safety eliminates runtime checks
-- Minimal memory overhead for violation lists
+### Rule Evaluation
+- O(n*m) complexity where n=containers, m=rules
+- Conditions short-circuit on first match
+- Minimal memory overhead
 
 ## Security Considerations
 
@@ -289,18 +275,18 @@ Removes all installed artifacts.
 
 3. **Input Validation**
    - YAML parsing is safe (no code execution)
-   - JSON schema validation in Haskell
    - Bounded resource usage
+   - Config validation prevents injection
 
 ## Future Enhancements
 
 ### Planned Features
-- Custom rule plugins
-- SARIF output format for IDE integration
-- JSON/YAML output modes
-- Rule severity overrides via config file
-- Parallel validation for large repositories
-- Support for Kustomize overlays
+- Custom condition plugins via Go plugins
+- Regex-based conditions
+- Resource-type specific rules
+- Remote config loading (HTTP/S3)
+- JSON/SARIF output formats
+- Parallel validation
 
 ### Non-Goals
 - Runtime validation (use OPA/Kyverno)
@@ -310,9 +296,34 @@ Removes all installed artifacts.
 
 ---
 
-## References
+## Comparison: Old vs New Architecture
 
-- [Kubernetes API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/)
-- [Production Best Practices](https://learnk8s.io/production-best-practices)
-- [Haskell Aeson Library](https://hackage.haskell.org/package/aeson)
-- [Go YAML Library](https://github.com/go-yaml/yaml)
+### Old (Haskell + Go)
+```
+Go CLI → JSON → Haskell Rule Engine → JSON → Go Reporter
+```
+
+**Issues:**
+- Complex installation (Go + GHC + Cabal)
+- Slow builds
+- Hard to extend for non-Haskell devs
+- IPC overhead
+
+### New (Pure Go + YAML)
+```
+Go CLI → YAML Config → Go Rule Engine → Go Reporter
+```
+
+**Benefits:**
+- Simple installation (just Go)
+- Fast builds
+- Easy to extend (just edit YAML)
+- No IPC overhead
+- Organization-friendly
+
+---
+
+For more details, see:
+- [README.md](README.md) - Overview
+- [CONFIG.md](CONFIG.md) - Configuration system
+- [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute
