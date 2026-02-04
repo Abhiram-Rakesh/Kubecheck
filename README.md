@@ -4,11 +4,11 @@
 
 A local CLI tool that validates Kubernetes YAML files against production best practices. Designed for CI/CD pipelines, pre-commit hooks, and local developer validation.
 
-## 🎯 Overview
+## Overview
 
 `kubecheck` is a static analysis tool that validates Kubernetes manifests without connecting to a cluster. Built with Go and featuring a YAML-configurable rule system for maximum flexibility.
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────┐
@@ -21,9 +21,10 @@ A local CLI tool that validates Kubernetes YAML files against production best pr
 └─────────────────────────────────────────┘
 ```
 
-## 🚀 Features
+## Features
 
 ### Input Support
+
 - ✅ Single Kubernetes YAML files
 - ✅ Directories (recursive scanning)
 - ✅ Multi-document YAML files (`---` separated)
@@ -47,12 +48,12 @@ See [CONFIG.md](CONFIG.md) for complete documentation.
 
 ### Default Validation Rules
 
-| Rule | Severity | Description |
-|------|----------|-------------|
-| `no-latest-image` | ERROR | Disallow `image: latest` tags |
-| `require-resource-requests` | WARN | Require CPU/memory requests |
-| `require-resource-limits` | WARN | Require CPU/memory limits |
-| `no-root-containers` | ERROR | Detect containers running as root |
+| Rule                        | Severity | Description                       |
+| --------------------------- | -------- | --------------------------------- |
+| `no-latest-image`           | ERROR    | Disallow `image: latest` tags     |
+| `require-resource-requests` | WARN     | Require CPU/memory requests       |
+| `require-resource-limits`   | WARN     | Require CPU/memory limits         |
+| `no-root-containers`        | ERROR    | Detect containers running as root |
 
 ### Exit Codes
 
@@ -64,7 +65,7 @@ See [CONFIG.md](CONFIG.md) for complete documentation.
 
 The CLI exits with the highest severity found, making it CI-friendly.
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 
@@ -81,6 +82,7 @@ chmod +x *.sh
 ```
 
 This installs:
+
 - `kubecheck` binary to `/usr/local/bin`
 
 ### Uninstall
@@ -89,7 +91,7 @@ This installs:
 ./uninstall.sh
 ```
 
-## 🔧 Usage
+## Usage
 
 ### Basic Usage
 
@@ -116,6 +118,7 @@ kubecheck --config my-rules.yaml deployment.yaml
 ### Configuration
 
 kubecheck looks for configuration files in:
+
 1. `./kubecheck.yaml` (current directory)
 2. `./kubecheck.yml` (current directory)
 3. `~/.kubecheck/config.yaml` (home directory)
@@ -141,6 +144,7 @@ See [CONFIG.md](CONFIG.md) for complete configuration guide.
 ### Examples
 
 **Single file validation:**
+
 ```bash
 $ kubecheck examples/deployment.yaml
 
@@ -158,6 +162,7 @@ $ kubecheck examples/deployment.yaml
 ```
 
 **Directory validation:**
+
 ```bash
 $ kubecheck k8s/
 
@@ -177,39 +182,7 @@ $ kubecheck k8s/
   Status  ➔ FAILED Exit code: 2
 ```
 
-## 🏛️ Project Structure
-
-```
-kubecheck/
-├── cmd/
-│   └── kubecheck/           # Go CLI application
-│       ├── main.go          # Entry point
-│       ├── parser.go        # YAML parsing
-│       ├── helm.go          # Helm integration
-│       ├── reporter.go      # Output formatting
-│       ├── config.go        # Config file loading
-│       └── rule-engine.go   # Rule evaluation
-├── examples/                # Sample Kubernetes manifests
-├── kubecheck.yaml           # Example config file
-├── build.sh                 # Build and install script
-├── uninstall.sh             # Uninstall script
-├── CONFIG.md                # Configuration guide
-└── README.md
-```
-
-## 🔒 Non-Goals
-
-This project **explicitly does not**:
-
-- ❌ Connect to a Kubernetes cluster
-- ❌ Call the Kubernetes API
-- ❌ Modify resources
-- ❌ Perform runtime validation
-- ❌ Provide a web UI
-
-**This is static analysis only.**
-
-## 🤝 Contributing
+## Contributing
 
 ### Adding New Rules
 
@@ -223,7 +196,7 @@ case "my_new_condition":
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guide.
 
-## 📖 Documentation
+## Documentation
 
 - [CONFIG.md](CONFIG.md) - Configuration guide
 - [QUICKSTART.md](QUICKSTART.md) - Get started in 5 minutes
@@ -231,17 +204,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guide.
 - [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute
 - [EXAMPLES.md](EXAMPLES.md) - Real-world usage examples
 
-## 📄 License
-
-MIT License - See LICENSE file for details
-
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Built with best practices from:
+
 - [Kubernetes Production Best Practices](https://learnk8s.io/production-best-practices)
 - [NSA Kubernetes Hardening Guide](https://www.nsa.gov/Press-Room/News-Highlights/Article/Article/2716980/)
 - [CIS Kubernetes Benchmark](https://www.cisecurity.org/benchmark/kubernetes)
 
 ---
-
-**Made with ❤️ for production Kubernetes deployments**

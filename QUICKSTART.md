@@ -6,7 +6,7 @@ Get up and running with `kubecheck` in 5 minutes.
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/Abhiram-Rakesh/kubecheck.git
 cd kubecheck
 
 # Make scripts executable
@@ -18,7 +18,7 @@ chmod +x *.sh
 
 **Prerequisites:** Go ≥ 1.21, Helm (optional)
 
-## 🎯 Basic Usage
+## Basic Usage
 
 ### Validate a Single File
 
@@ -27,6 +27,7 @@ kubecheck examples/deployment.yaml
 ```
 
 **Output:**
+
 ```
   ● File: examples/deployment.yaml
   ┌─ Deployment: nginx-deployment ──────────────────────┐
@@ -69,17 +70,17 @@ Or:
 kubectl get deployment nginx -o yaml | kubecheck -
 ```
 
-## 📋 Understanding Exit Codes
+## Understanding Exit Codes
 
-| Code | Meaning | Description |
-|------|---------|-------------|
-| 0 | OK | All checks passed |
-| 1 | WARN | Warnings found, but no errors |
-| 2 | ERROR | Errors found (fails CI builds) |
+| Code | Meaning | Description                    |
+| ---- | ------- | ------------------------------ |
+| 0    | OK      | All checks passed              |
+| 1    | WARN    | Warnings found, but no errors  |
+| 2    | ERROR   | Errors found (fails CI builds) |
 
 The CLI exits with the **highest severity** found across all files.
 
-## 🔍 Verbose Mode
+## Verbose Mode
 
 Get detailed output for all files, including those that pass:
 
@@ -87,7 +88,7 @@ Get detailed output for all files, including those that pass:
 kubecheck -v k8s/
 ```
 
-## 🚨 What kubecheck Checks
+## What kubecheck Checks
 
 ### Default Rules
 
@@ -103,7 +104,7 @@ If no config file is found, kubecheck uses these built-in rules:
 1. **Resource requests should be set**
 2. **Resource limits should be set**
 
-## ⚙️ Custom Configuration
+## Custom Configuration
 
 Create a `kubecheck.yaml` file in your project:
 
@@ -119,11 +120,12 @@ rules:
 
 kubecheck will automatically find and use it. See [CONFIG.md](CONFIG.md) for details.
 
-## 🎓 Common Workflows
+## Common Workflows
 
 ### Pre-Commit Hook
 
 `.git/hooks/pre-commit`:
+
 ```bash
 #!/bin/bash
 kubecheck k8s/
@@ -132,12 +134,14 @@ kubecheck k8s/
 ### CI/CD Pipeline
 
 **GitHub Actions:**
+
 ```yaml
 - name: Validate Kubernetes Manifests
   run: kubecheck k8s/
 ```
 
 **GitLab CI:**
+
 ```yaml
 validate:
   script:
@@ -160,7 +164,7 @@ kubecheck ./charts/myapp/
 helm template ./charts/myapp -f prod-values.yaml | kubecheck -
 ```
 
-## 📦 Example Manifests
+## Example Manifests
 
 The `examples/` directory contains sample manifests:
 
@@ -179,11 +183,12 @@ kubecheck examples/multi-doc.yaml
 kubecheck examples/helm-chart/
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### "kubecheck: command not found"
 
 Make sure `/usr/local/bin` is in your `PATH`:
+
 ```bash
 export PATH="/usr/local/bin:$PATH"
 ```
@@ -193,19 +198,20 @@ Or add to `~/.bashrc` or `~/.zshrc`.
 ### "helm template failed"
 
 Ensure Helm is installed:
+
 ```bash
 brew install helm  # macOS
 # or
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 ```
 
-## 🗑️ Uninstall
+## Uninstall
 
 ```bash
 ./uninstall.sh
 ```
 
-## 🎯 Next Steps
+## Next Steps
 
 1. **Read [CONFIG.md](CONFIG.md)** to customize rules for your organization
 2. **Explore [ARCHITECTURE.md](ARCHITECTURE.md)** to understand how it works
@@ -213,4 +219,4 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 ---
 
-**Happy validating!** 🚀
+**Happy validating!**

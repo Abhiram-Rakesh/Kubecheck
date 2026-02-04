@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing! This guide will help you get started.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 kubecheck is built entirely in Go with a YAML-configurable rule system:
 
@@ -16,7 +16,7 @@ kubecheck is built entirely in Go with a YAML-configurable rule system:
 └──────────────────────────────────────────┘
 ```
 
-## 🚀 Development Setup
+## Development Setup
 
 ### Prerequisites
 
@@ -27,7 +27,7 @@ kubecheck is built entirely in Go with a YAML-configurable rule system:
 
 ```bash
 # Clone the repository
-git clone <your-repo>
+git clone https://github.com/Abhiram-Rakesh/kubecheck.git
 cd kubecheck
 
 # Build locally
@@ -38,19 +38,20 @@ go build -o kubecheck
 ./kubecheck ../../examples/deployment.yaml
 ```
 
-## 📝 Adding New Validation Rules
+## Adding New Validation Rules
 
 ### Option 1: YAML Configuration (Recommended)
 
 For most use cases, you can add rules via YAML configuration without touching code:
 
 **1. Edit `kubecheck.yaml`:**
+
 ```yaml
 rules:
   - name: my-custom-rule
     description: Description of what this checks
-    severity: ERROR  # or WARN
-    type: security   # or image, resources, etc.
+    severity: ERROR # or WARN
+    type: security # or image, resources, etc.
     conditions:
       - existing_condition_type
     message: "Container '{container}' violates custom rule"
@@ -58,6 +59,7 @@ rules:
 ```
 
 **2. Test it:**
+
 ```bash
 kubecheck --config kubecheck.yaml examples/deployment.yaml
 ```
@@ -67,6 +69,7 @@ kubecheck --config kubecheck.yaml examples/deployment.yaml
 If you need a new condition type, you'll need to modify Go code:
 
 **1. Add condition check function** in `cmd/kubecheck/rule-engine.go`:
+
 ```go
 // checkHostNetwork checks if container uses host network
 func checkHostNetwork(c Container) bool {
@@ -76,10 +79,11 @@ func checkHostNetwork(c Container) bool {
 ```
 
 **2. Add to condition switch** in `checkCondition()`:
+
 ```go
 func (re *RuleEngine) checkCondition(condition string, container Container) bool {
     // ... existing code ...
-    
+
     switch conditionType {
     // ... existing cases ...
     case "uses_host_network":
@@ -91,6 +95,7 @@ func (re *RuleEngine) checkCondition(condition string, container Container) bool
 ```
 
 **3. Update Container struct if needed** (add new fields):
+
 ```go
 type Container struct {
     Name            string
@@ -102,6 +107,7 @@ type Container struct {
 ```
 
 **4. Update parser** in `parseContainers()` to extract new field:
+
 ```go
 if hostNet, ok := containerMap["hostNetwork"].(bool); ok {
     container.HostNetwork = &hostNet
@@ -109,11 +115,13 @@ if hostNet, ok := containerMap["hostNetwork"].(bool); ok {
 ```
 
 **5. Document the new condition** in `CONFIG.md`:
+
 ```markdown
 - `uses_host_network` - Container uses host network
 ```
 
 **6. Create test case** in `examples/`:
+
 ```yaml
 # examples/host-network.yaml
 apiVersion: v1
@@ -123,26 +131,29 @@ metadata:
 spec:
   hostNetwork: true
   containers:
-  - name: app
-    image: nginx:1.21
+    - name: app
+      image: nginx:1.21
 ```
 
 **7. Test:**
+
 ```bash
 cd cmd/kubecheck
 go build
 ./kubecheck ../../examples/host-network.yaml
 ```
 
-## 🧪 Testing
+## Testing
 
 ### Run Tests
+
 ```bash
 cd cmd/kubecheck
 go test -v ./...
 ```
 
 ### Manual Testing
+
 ```bash
 # Test single file
 kubecheck examples/deployment.yaml
@@ -160,7 +171,7 @@ cat examples/pod.yaml | kubecheck -
 kubecheck --config custom-rules.yaml examples/
 ```
 
-## 📋 Code Style
+## Code Style
 
 ### Go Code Style
 
@@ -171,6 +182,7 @@ kubecheck --config custom-rules.yaml examples/
 - Add comments for exported functions
 
 **Example:**
+
 ```go
 // checkImageTag validates the container image tag
 func checkImageTag(image, tag string) bool {
@@ -188,7 +200,7 @@ func checkImageTag(image, tag string) bool {
 rules:
   - name: kebab-case-name
     description: Clear, concise description
-    severity: ERROR  # or WARN
+    severity: ERROR # or WARN
     type: category
     conditions:
       - condition_one
@@ -197,11 +209,12 @@ rules:
     help: "Actionable fix suggestion"
 ```
 
-## 🔄 Pull Request Process
+## Pull Request Process
 
 1. **Fork the repository**
 
 2. **Create a feature branch**
+
    ```bash
    git checkout -b feature/my-new-condition
    ```
@@ -212,12 +225,14 @@ rules:
    - Add test cases to `examples/`
 
 4. **Test thoroughly**
+
    ```bash
    go build
    ./kubecheck examples/
    ```
 
 5. **Commit with clear messages**
+
    ```bash
    git commit -m "feat: add host network validation condition"
    ```
@@ -227,16 +242,18 @@ rules:
    git push origin feature/my-new-condition
    ```
 
-## 📚 Condition Design Guidelines
+## Condition Design Guidelines
 
 ### Severity Levels
 
 **ERROR** - Production-critical violations
+
 - Security issues (root containers, privileged mode)
 - Non-deterministic configurations (`:latest` tags)
 - Critical misconfigurations
 
 **WARN** - Best practice violations
+
 - Missing resource limits
 - Missing health probes
 - Suboptimal configurations
@@ -244,6 +261,7 @@ rules:
 ### Condition Characteristics
 
 Good conditions should be:
+
 1. **Specific** - Check one thing clearly
 2. **Deterministic** - Same input = same result
 3. **Documented** - Clear description and help text
@@ -253,6 +271,7 @@ Good conditions should be:
 ### Condition Naming
 
 Use descriptive names in snake_case:
+
 - ✅ `missing_cpu_requests`
 - ✅ `image_tag_equals:latest`
 - ✅ `run_as_user_zero`
@@ -262,16 +281,18 @@ Use descriptive names in snake_case:
 ### Message Templates
 
 Use `{container}` placeholder for container name:
+
 ```yaml
 message: "Container '{container}' uses latest tag"
 ```
 
 Provide actionable help:
+
 ```yaml
 help: "use a specific version like nginx:1.21.0"
 ```
 
-## 🐛 Debugging
+## Debugging
 
 ### Debug Go Code
 
@@ -307,20 +328,20 @@ kubecheck --config test-config.yaml -v deployment.yaml
    - Verify type assertions are correct
    - Test with simple example first
 
-## 📖 Resources
+## Resources
 
 - [Kubernetes API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/)
 - [Production Best Practices](https://learnk8s.io/production-best-practices)
 - [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
 
-## 💬 Community
+## Community
 
 - GitHub Issues: Bug reports and feature requests
 - GitHub Discussions: Questions and ideas
 
 ---
 
-**Thank you for contributing to kubecheck!** 🚀
+**Thank you for contributing to kubecheck!**
 
 ### Quick Reference
 
