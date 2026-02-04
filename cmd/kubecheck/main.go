@@ -65,6 +65,14 @@ func main() {
 	maxSeverity := ExitOK
 	reporter := NewReporter(config.Verbose)
 
+	// Enable directory mode if processing multiple files
+	if len(files) > 1 || isDirectory(input) {
+		reporter.SetDirectoryMode(true)
+		if isDirectory(input) {
+			reporter.PrintDirectoryHeader(input)
+		}
+	}
+
 	for _, file := range files {
 		resources, err := parseYAMLFile(file)
 		if err != nil {
