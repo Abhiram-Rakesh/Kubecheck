@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -21,6 +20,7 @@ type Config struct {
 func main() {
 	// Parse command line flags
 	verbose := flag.Bool("v", false, "Verbose output")
+	configFile := flag.String("config", "", "Path to kubecheck config file (default: ./kubecheck.yaml or ~/.kubecheck/config.yaml)")
 	flag.Parse()
 
 	config := Config{
@@ -37,6 +37,57 @@ func main() {
 	}
 
 	input := args[0]
+
+	// Load rule configuration
+	var ruleConfig *RuleConfig
+	if *configFile != "" {
+		// User specified a config file
+		cfg, err := LoadRuleConfig(*configFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error loading config file: %v\n", err)
+			os.Exit(ExitError)
+		}
+		ruleConfig = cfg
+		if config.Verbose {
+			fmt.Printf("Using config file: %s\n", *configFile)
+		}
+	} else {
+		// Try default locations
+		configPaths := []string{
+			"./kubecheck.yaml",
+			"./kubecheck.yml",
+			filepath.Join(os.Getenv("HOME"), ".kubecheck", "config.yaml"),
+			filepath.Join(os.Getenv("HOME"), ".kubecheck", "config.yml"),
+		}
+
+		foundConfig := false
+		for _, path := range configPaths {
+			if _, err := os.Stat(path); err == nil {
+				cfg, err := LoadRuleConfig(path)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error loading config file %s: %v\n", path, err)
+					os.Exit(ExitError)
+				}
+				ruleConfig = cfg
+				foundConfig = true
+				if config.Verbose {
+					fmt.Printf("Using config file: %s\n", path)
+				}
+				break
+			}
+		}
+
+		if !foundConfig {
+			// Use default built-in rules
+			ruleConfig = GetDefaultConfig()
+			if config.Verbose {
+				fmt.Println("Using built-in default rules")
+			}
+		}
+	}
+
+	// Create rule engine
+	ruleEngine := NewRuleEngine(ruleConfig)
 
 	// Process input
 	var files []string
@@ -81,11 +132,8 @@ func main() {
 		}
 
 		for _, resource := range resources {
-			violations, err := validateResource(resource)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error validating %s: %v\n", file, err)
-				continue
-			}
+			// Use rule engine to evaluate
+			violations := ruleEngine.EvaluateResource(resource)
 
 			severity := reporter.ReportViolations(file, resource, violations)
 			if severity > maxSeverity {
@@ -112,27 +160,4 @@ func isDirectory(path string) bool {
 		return false
 	}
 	return info.IsDir()
-}
-
-// validateResource calls the Haskell rule engine
-func validateResource(resource K8sResource) ([]Violation, error) {
-	// Prepare JSON input for Haskell rule engine
-	input, err := json.Marshal(resource)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal resource: %w", err)
-	}
-
-	// Call Haskell rule engine
-	output, err := callRuleEngine(input)
-	if err != nil {
-		return nil, fmt.Errorf("rule engine error: %w", err)
-	}
-
-	// Parse violations
-	var violations []Violation
-	if err := json.Unmarshal(output, &violations); err != nil {
-		return nil, fmt.Errorf("failed to parse violations: %w", err)
-	}
-
-	return violations, nil
 }

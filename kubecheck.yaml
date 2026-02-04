@@ -1,0 +1,46 @@
+# kubecheck configuration file
+# Define custom validation rules for your organization
+
+rules:
+  # Security Rules
+  - name: no-latest-image
+    description: Disallow latest image tags for production deployments
+    severity: ERROR
+    type: image
+    conditions:
+      - image_tag_equals:latest
+      - image_tag_missing
+    message: "Container '{container}' uses 'latest' image tag"
+    help: "use a specific version or digest (e.g., nginx:1.21.0 or nginx@sha256:...)"
+
+  - name: no-root-containers
+    description: Containers must not run as root user
+    severity: ERROR
+    type: security
+    conditions:
+      - missing_security_context
+      - run_as_non_root_false
+      - run_as_user_zero
+    message: "Container '{container}' may run as root"
+    help: "set runAsNonRoot: true and runAsUser to non-zero value"
+
+  # Resource Management Rules
+  - name: require-resource-requests
+    description: All containers must specify CPU and memory requests
+    severity: WARN
+    type: resources
+    conditions:
+      - missing_cpu_requests
+      - missing_memory_requests
+    message: "Container '{container}' missing resource requests"
+    help: "set resources.requests.cpu and resources.requests.memory"
+
+  - name: require-resource-limits
+    description: All containers must specify CPU and memory limits
+    severity: WARN
+    type: resources
+    conditions:
+      - missing_cpu_limits
+      - missing_memory_limits
+    message: "Container '{container}' missing resource limits"
+    help: "set resources.limits.cpu and resources.limits.memory"

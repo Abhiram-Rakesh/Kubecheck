@@ -1,8 +1,0 @@
-packages: .
-
--- Optimization
-optimization: True
-
--- Warnings
-package kubecheck-rules
-  ghc-options: -Wall -Werror -O2
