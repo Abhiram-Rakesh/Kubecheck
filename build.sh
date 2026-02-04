@@ -3,86 +3,73 @@ set -e
 
 echo "🔨 Building kubecheck..."
 
-# Colors for output
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Save the project root directory
 PROJECT_ROOT=$(pwd)
+REQUIRED_GO_VERSION="1.21"
+GO_INSTALL_DIR="/usr/local/go"
+GO_TARBALL="go1.22.1.linux-amd64.tar.gz"
+GO_DOWNLOAD_URL="https://go.dev/dl/${GO_TARBALL}"
 
-# Check prerequisites
 echo "📋 Checking prerequisites..."
 
-# Check Go
-if ! command -v go &> /dev/null; then
-    echo -e "${RED}❌ Go is not installed${NC}"
-    echo "Please install Go >= 1.21 from https://go.dev/dl/"
-    exit 1
+install_go() {
+    echo -e "${YELLOW}⚠ Go not found or version too old. Installing Go...${NC}"
+
+    sudo rm -rf "$GO_INSTALL_DIR"
+    curl -fsSL "$GO_DOWNLOAD_URL" -o /tmp/$GO_TARBALL
+
+    sudo tar -C /usr/local -xzf /tmp/$GO_TARBALL
+    rm /tmp/$GO_TARBALL
+
+    # Ensure Go is in PATH for this script
+    export PATH=/usr/local/go/bin:$PATH
+
+    if ! command -v go &>/dev/null; then
+        echo -e "${RED}❌ Go installation failed${NC}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}✓ Go installed successfully${NC}"
+}
+
+version_ge() {
+    # returns 0 if $1 >= $2
+    [ "$(printf '%s\n' "$2" "$1" | sort -V | head -n1)" = "$2" ]
+}
+
+if command -v go &>/dev/null; then
+    GO_VERSION=$(go version | awk '{print $3}' | sed 's/go//')
+    echo -e "${GREEN}✓${NC} Go $GO_VERSION found"
+
+    if ! version_ge "$GO_VERSION" "$REQUIRED_GO_VERSION"; then
+        install_go
+    fi
+else
+    install_go
 fi
 
-GO_VERSION=$(go version | awk '{print $3}' | sed 's/go//')
-echo -e "${GREEN}✓${NC} Go $GO_VERSION found"
-
-# Check GHC (via ghcup)
-if ! command -v ghc &> /dev/null; then
-    echo -e "${RED}❌ GHC is not installed${NC}"
-    echo "Please install GHC via ghcup:"
-    echo "  curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh"
-    echo "  ghcup install ghc 9.6.6"
-    echo "  ghcup set ghc 9.6.6"
-    exit 1
-fi
-
-GHC_VERSION=$(ghc --version | awk '{print $NF}')
-echo -e "${GREEN}✓${NC} GHC $GHC_VERSION found"
-
-# Check cabal
-if ! command -v cabal &> /dev/null; then
-    echo -e "${RED}❌ Cabal is not installed${NC}"
-    echo "Please install Cabal via ghcup:"
-    echo "  ghcup install cabal"
-    exit 1
-fi
-
-CABAL_VERSION=$(cabal --version | head -n1 | awk '{print $NF}')
-echo -e "${GREEN}✓${NC} Cabal $CABAL_VERSION found"
-
-# Build Haskell rule engine
-echo ""
-echo "🔧 Building Haskell rule engine..."
-cd "$PROJECT_ROOT/haskell"
-cabal update
-cabal build exe:kubecheck-rules
-HASKELL_BIN=$(cabal list-bin exe:kubecheck-rules)
-echo -e "${GREEN}✓${NC} Haskell rule engine built"
-
-# Build Go CLI
 echo ""
 echo "🔧 Building Go CLI..."
 cd "$PROJECT_ROOT/cmd/kubecheck"
+
 go mod tidy
 go build -o kubecheck
 echo -e "${GREEN}✓${NC} Go CLI built"
 
-# Install binaries
 echo ""
 echo "📦 Installing to /usr/local..."
 
-# Create installation directories
 sudo mkdir -p /usr/local/bin
 sudo mkdir -p /usr/local/lib/kubecheck
 
-# Install Go binary
 echo "  Installing kubecheck CLI..."
 sudo cp kubecheck /usr/local/bin/kubecheck
 sudo chmod +x /usr/local/bin/kubecheck
-
-# Install Haskell rule engine
-echo "  Installing rule engine..."
-sudo cp "$HASKELL_BIN" /usr/local/lib/kubecheck/kubecheck-rules
-sudo chmod +x /usr/local/lib/kubecheck/kubecheck-rules
 
 echo ""
 echo -e "${GREEN}✅ Installation complete!${NC}"
