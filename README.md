@@ -75,7 +75,7 @@ The CLI exits with the highest severity found, making it CI-friendly.
 ### Install
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Abhiram-Rakesh/kubecheck.git
 cd kubecheck
 chmod +x *.sh
 ./build.sh
