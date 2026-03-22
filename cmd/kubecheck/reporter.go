@@ -46,6 +46,9 @@ const (
 	SymbolTree    = "└─"
 )
 
+// boxInnerWidth is the number of characters between the left and right border
+const boxInnerWidth = 69
+
 // Violation represents a single validation violation
 type Violation struct {
 	Severity string `json:"severity"`
@@ -140,12 +143,23 @@ func (r *Reporter) printOK(filename string, resource K8sResource) {
 		fmt.Printf("\n  %s%s File: %s%s\n", ColorBold, SymbolBullet, filename, ColorReset)
 		resourceName := getResourceName(resource)
 		if resourceName != "" {
-			fmt.Printf("  %s%s %s: %s %s\n",
-				ColorGreen, BoxTopLeft, resource.Kind, resourceName,
-				strings.Repeat(BoxHorizontal, max(1, 60-len(resource.Kind)-len(resourceName))))
-			fmt.Printf("  %s  %s%s All checks passed%s\n",
-				BoxVertical, ColorGreen, SymbolOK, ColorReset)
-			fmt.Printf("  %s%s\n", ColorGreen, BoxBottomLeft+strings.Repeat(BoxHorizontal, 68))
+			title := fmt.Sprintf(" %s: %s ", resource.Kind, resourceName)
+			titlePad := max(1, boxInnerWidth-1-len([]rune(title)))
+			fmt.Printf("  %s%s\n",
+				ColorGreen,
+				BoxTopLeft+BoxHorizontal+title+strings.Repeat(BoxHorizontal, titlePad)+BoxTopRight+ColorReset)
+
+			innerOK := fmt.Sprintf("  %s All checks passed", SymbolOK)
+			okPad := max(0, boxInnerWidth-len([]rune(innerOK)))
+			fmt.Printf("  %s%s%s%s%s%s%s\n",
+				ColorGreen, BoxVertical,
+				ColorGreen+innerOK+ColorReset,
+				strings.Repeat(" ", okPad),
+				ColorGreen, BoxVertical, ColorReset)
+
+			fmt.Printf("  %s%s\n",
+				ColorGreen,
+				BoxBottomLeft+strings.Repeat(BoxHorizontal, boxInnerWidth)+BoxBottomRight+ColorReset)
 		}
 	}
 }
@@ -154,12 +168,12 @@ func (r *Reporter) printOK(filename string, resource K8sResource) {
 func (r *Reporter) printFileViolations(filename string, resource K8sResource, violations []Violation, errorCount, warnCount int) {
 	resourceName := getResourceName(resource)
 	title := fmt.Sprintf(" %s: %s ", resource.Kind, resourceName)
-	padding := max(1, 68-len(title))
+	titlePad := max(1, boxInnerWidth-1-len([]rune(title)))
 
 	fmt.Printf("\n  %s%s File: %s%s\n", ColorBold, SymbolBullet, filename, ColorReset)
-	fmt.Printf("  %s%s%s%s%s\n",
-		ColorCyan, BoxTopLeft, BoxHorizontal, title,
-		strings.Repeat(BoxHorizontal, padding)+BoxTopRight)
+	fmt.Printf("  %s%s\n",
+		ColorCyan,
+		BoxTopLeft+BoxHorizontal+title+strings.Repeat(BoxHorizontal, titlePad)+BoxTopRight+ColorReset)
 
 	// Group violations by type
 	errorViolations := []Violation{}
@@ -176,7 +190,7 @@ func (r *Reporter) printFileViolations(filename string, resource K8sResource, vi
 	// Print errors first
 	for i, v := range errorViolations {
 		if i > 0 {
-			fmt.Printf("  %s%s%s\n", ColorCyan, BoxVertical, ColorReset)
+			r.printSeparatorLine()
 		}
 		r.printViolationDetail(v, BoxVertical)
 	}
@@ -184,18 +198,26 @@ func (r *Reporter) printFileViolations(filename string, resource K8sResource, vi
 	// Print warnings
 	for i, v := range warnViolations {
 		if i > 0 || len(errorViolations) > 0 {
-			fmt.Printf("  %s%s%s\n", ColorCyan, BoxVertical, ColorReset)
+			r.printSeparatorLine()
 		}
 		r.printViolationDetail(v, BoxVertical)
 	}
 
 	// Bottom border with summary
 	summary := fmt.Sprintf(" [ %d errors | %d warns ] ", errorCount, warnCount)
-	summaryPadding := max(1, 70-len(summary))
+	summaryPad := max(1, boxInnerWidth-len([]rune(summary)))
+	fmt.Printf("  %s%s%s%s\n",
+		ColorCyan,
+		BoxBottomLeft+strings.Repeat(BoxHorizontal, summaryPad)+summary+BoxBottomRight,
+		ColorReset, "")
+}
+
+// printSeparatorLine prints an empty box line with both borders
+func (r *Reporter) printSeparatorLine() {
 	fmt.Printf("  %s%s%s%s%s\n",
-		ColorCyan, BoxBottomLeft,
-		strings.Repeat(BoxHorizontal, summaryPadding),
-		summary, BoxBottomRight+ColorReset)
+		ColorCyan, BoxVertical,
+		strings.Repeat(" ", boxInnerWidth),
+		ColorCyan, BoxVertical+ColorReset)
 }
 
 // printDirectoryViolations prints violations in compact format (directory mode)
@@ -226,7 +248,6 @@ func (r *Reporter) printDirectoryViolations(filename string, resource K8sResourc
 			fmt.Printf("     %s [%s] %s%s\n",
 				ColorGray+SymbolTree, resourceName, v.Message, ColorReset)
 		} else if isLast && v.Severity == SeverityError {
-			// Show pointer for errors
 			fmt.Printf("        %s> %s%s\n",
 				ColorGray, v.Message, ColorReset)
 		} else {
@@ -235,7 +256,7 @@ func (r *Reporter) printDirectoryViolations(filename string, resource K8sResourc
 	}
 }
 
-// printViolationDetail prints a single violation with detailed formatting
+// printViolationDetail prints a single violation with right border
 func (r *Reporter) printViolationDetail(v Violation, border string) {
 	var symbol, color, label string
 
@@ -249,18 +270,41 @@ func (r *Reporter) printViolationDetail(v Violation, border string) {
 		label = "Resource Hygiene"
 	}
 
-	fmt.Printf("  %s%s  %s%s  %s%s\n",
-		ColorCyan, border, color, symbol, label, ColorReset)
-	fmt.Printf("  %s%s     %s%s%s\n",
-		ColorCyan, border, ColorBold, v.Message, ColorReset)
+	// icon + label line
+	innerLabel := fmt.Sprintf("  %s  %s", symbol, label)
+	labelPad := max(0, boxInnerWidth-len([]rune(innerLabel)))
+	fmt.Printf("  %s%s%s%s%s%s%s\n",
+		ColorCyan, border,
+		color+innerLabel+ColorReset,
+		strings.Repeat(" ", labelPad),
+		ColorCyan, BoxVertical, ColorReset)
 
-	// Add helpful pointer or suggestion
+	// message line
+	innerMsg := fmt.Sprintf("     %s", v.Message)
+	msgPad := max(0, boxInnerWidth-len([]rune(innerMsg)))
+	fmt.Printf("  %s%s%s%s%s%s%s\n",
+		ColorCyan, border,
+		ColorBold+innerMsg+ColorReset,
+		strings.Repeat(" ", msgPad),
+		ColorCyan, BoxVertical, ColorReset)
+
+	// help line
 	if v.Rule == "no-latest-image" {
-		fmt.Printf("  %s%s     %s%s use a specific version or digest%s\n",
-			ColorCyan, border, ColorGray, SymbolPointer+"───", ColorReset)
+		innerHelp := fmt.Sprintf("     %s use a specific version or digest", SymbolPointer+"───")
+		helpPad := max(0, boxInnerWidth-len([]rune(innerHelp)))
+		fmt.Printf("  %s%s%s%s%s%s%s\n",
+			ColorCyan, border,
+			ColorGray+innerHelp+ColorReset,
+			strings.Repeat(" ", helpPad),
+			ColorCyan, BoxVertical, ColorReset)
 	} else if v.Rule == "no-root-containers" {
-		fmt.Printf("  %s%s     %shelp: set 'runAsNonRoot: true' to improve pod security%s\n",
-			ColorCyan, border, ColorGray, ColorReset)
+		innerHelp := "     help: set 'runAsNonRoot: true' to improve pod security"
+		helpPad := max(0, boxInnerWidth-len([]rune(innerHelp)))
+		fmt.Printf("  %s%s%s%s%s%s%s\n",
+			ColorCyan, border,
+			ColorGray+innerHelp+ColorReset,
+			strings.Repeat(" ", helpPad),
+			ColorCyan, BoxVertical, ColorReset)
 	}
 }
 
