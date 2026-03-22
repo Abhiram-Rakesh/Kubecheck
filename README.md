@@ -37,12 +37,16 @@ See [docs/CONFIG.md](docs/CONFIG.md) for complete documentation.
 
 ### Default Validation Rules
 
-| Rule                        | Severity | Description                       |
-| --------------------------- | -------- | --------------------------------- |
-| `no-latest-image`           | ERROR    | Disallow `image: latest` tags     |
-| `require-resource-requests` | WARN     | Require CPU/memory requests       |
-| `require-resource-limits`   | WARN     | Require CPU/memory limits         |
-| `no-root-containers`        | ERROR    | Detect containers running as root |
+| Rule                          | Severity | Description                           |
+| ----------------------------- | -------- | ------------------------------------- |
+| `no-latest-image`             | ERROR    | Disallow `image: latest` tags         |
+| `no-root-containers`          | ERROR    | Detect containers running as root     |
+| `no-privileged-containers`    | ERROR    | Detect containers in privileged mode  |
+| `require-resource-requests`   | WARN     | Require CPU/memory requests           |
+| `require-resource-limits`     | WARN     | Require CPU/memory limits             |
+| `require-liveness-probe`      | WARN     | Require a liveness probe              |
+| `require-readiness-probe`     | WARN     | Require a readiness probe             |
+| `require-image-pull-policy`   | WARN     | Require explicit imagePullPolicy      |
 
 ### Exit Codes
 

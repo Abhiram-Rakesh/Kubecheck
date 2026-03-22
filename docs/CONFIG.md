@@ -6,10 +6,11 @@ kubecheck supports YAML-based configuration files, allowing organizations to def
 
 kubecheck will automatically look for configuration files in the following order:
 
-1. `./kubecheck.yaml` (current directory)
-2. `./kubecheck.yml` (current directory)
-3. `~/.kubecheck/config.yaml` (user home directory)
-4. `~/.kubecheck/config.yml` (user home directory)
+1. `--config` flag (highest priority)
+2. `./kubecheck.yaml` (current directory)
+3. `./kubecheck.yml` (current directory)
+4. `~/.kubecheck/config.yaml` (user home directory)
+5. `~/.kubecheck/config.yml` (user home directory)
 
 You can also specify a custom config file:
 
@@ -53,6 +54,16 @@ rules:
 - `missing_security_context` - No securityContext defined
 - `run_as_non_root_false` - runAsNonRoot is set to false
 - `run_as_user_zero` - runAsUser is set to 0 (root)
+- `privileged_true` - Container is running in privileged mode
+
+### Reliability Conditions
+
+- `missing_liveness_probe` - No livenessProbe defined
+- `missing_readiness_probe` - No readinessProbe defined
+
+### Image Pull Conditions
+
+- `missing_image_pull_policy` - No imagePullPolicy set
 
 ## Example Configuration
 
@@ -149,8 +160,12 @@ If no config file is found, kubecheck uses these default rules:
 
 1. **no-latest-image** (ERROR) - Disallow :latest tags
 2. **no-root-containers** (ERROR) - Containers must not run as root
-3. **require-resource-requests** (WARN) - CPU and memory requests required
-4. **require-resource-limits** (WARN) - CPU and memory limits required
+3. **no-privileged-containers** (ERROR) - Containers must not run in privileged mode
+4. **require-resource-requests** (WARN) - CPU and memory requests required
+5. **require-resource-limits** (WARN) - CPU and memory limits required
+6. **require-liveness-probe** (WARN) - Liveness probe must be defined
+7. **require-readiness-probe** (WARN) - Readiness probe must be defined
+8. **require-image-pull-policy** (WARN) - imagePullPolicy must be set explicitly
 
 ## Usage Examples
 

@@ -2,12 +2,18 @@
 
 Get up and running with `kubecheck` in 5 minutes.
 
-## ⚡ Quick Install
+## Quick Install
+
+### Pre-built Binary (Recommended)
+
+Download the latest binary for your platform from the [Releases page](https://github.com/Abhiram-Rakesh/Kubecheck/releases) and place it in your `PATH`.
+
+### Build from Source
 
 ```bash
 # Clone the repository
 git clone https://github.com/Abhiram-Rakesh/Kubecheck.git
-cd kubecheck
+cd Kubecheck
 
 # Make scripts executable
 chmod +x *.sh
@@ -23,13 +29,13 @@ chmod +x *.sh
 ### Validate a Single File
 
 ```bash
-kubecheck examples/deployment.yaml
+kubecheck deployment.yaml
 ```
 
 **Output:**
 
 ```
-  ● File: examples/deployment.yaml
+  ● File: deployment.yaml
   ┌─ Deployment: nginx-deployment ──────────────────────┐
   │  ✖  Security Violation
   │     Container 'nginx' uses 'latest' image tag
@@ -94,15 +100,19 @@ kubecheck -v k8s/
 
 If no config file is found, kubecheck uses these built-in rules:
 
-**❌ Errors (Exit Code 2)**
+**Errors (Exit Code 2)**
 
 1. **No `:latest` image tags**
 2. **Containers must not run as root**
+3. **Containers must not run in privileged mode**
 
-**⚠️ Warnings (Exit Code 1)**
+**Warnings (Exit Code 1)**
 
 1. **Resource requests should be set**
 2. **Resource limits should be set**
+3. **Liveness probe should be defined**
+4. **Readiness probe should be defined**
+5. **imagePullPolicy should be set explicitly**
 
 ## Custom Configuration
 
@@ -162,25 +172,6 @@ kubecheck ./charts/myapp/
 
 # Check specific rendered values
 helm template ./charts/myapp -f prod-values.yaml | kubecheck -
-```
-
-## Example Manifests
-
-The `examples/` directory contains sample manifests:
-
-```bash
-# Bad practices (will fail)
-kubecheck examples/deployment.yaml
-kubecheck examples/pod.yaml
-
-# Good practices (will pass)
-kubecheck examples/deployment-good.yaml
-
-# Multi-document YAML
-kubecheck examples/multi-doc.yaml
-
-# Helm chart
-kubecheck examples/helm-chart/
 ```
 
 ## Troubleshooting

@@ -194,6 +194,9 @@ type Container struct {
     Image           string
     Resources       *Resources
     SecurityContext *SecurityContext
+    LivenessProbe   bool
+    ReadinessProbe  bool
+    ImagePullPolicy string
 }
 ```
 
@@ -229,6 +232,17 @@ This script:
 1. Checks prerequisites (Go ≥ 1.21)
 2. Builds Go CLI
 3. Installs to `/usr/local/bin/kubecheck`
+
+### Binary Releases
+
+Cross-platform binaries are published automatically via GitHub Actions on tag push:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Binaries are built for Linux (amd64/arm64), macOS (amd64/arm64), and Windows (amd64) and attached to the GitHub Release.
 
 ### Uninstallation
 
@@ -304,6 +318,7 @@ Removes installed binary.
 - Remote config loading (HTTP/S3)
 - JSON/SARIF output formats
 - Parallel validation
+- Violation suppression via manifest annotations
 
 ### Non-Goals
 
