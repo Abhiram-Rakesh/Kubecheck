@@ -27,7 +27,7 @@ kubecheck is built entirely in Go with a YAML-configurable rule system:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Abhiram-Rakesh/kubecheck.git
+git clone https://github.com/Abhiram-Rakesh/Kubecheck.git
 cd kubecheck
 
 # Build locally
