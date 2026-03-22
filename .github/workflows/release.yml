@@ -21,6 +21,7 @@ jobs:
         run: |
           mkdir -p dist
           cd cmd/kubecheck
+          go mod tidy
           GOOS=linux   GOARCH=amd64  go build -o ../../dist/kubecheck-linux-amd64
           GOOS=linux   GOARCH=arm64  go build -o ../../dist/kubecheck-linux-arm64
           GOOS=darwin  GOARCH=amd64  go build -o ../../dist/kubecheck-darwin-amd64
