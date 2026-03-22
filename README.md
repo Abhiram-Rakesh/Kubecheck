@@ -6,27 +6,38 @@ A CLI tool that validates Kubernetes YAML files against production best practice
 
 ### Examples
 
-**Single file validation: (with & without errors)**
-
-![kubecheck-ind-bad](https://github.com/user-attachments/assets/786fff77-b97a-4f0e-93ed-4dc68457efc5)
-
-![kubecheck-ind-good](https://github.com/user-attachments/assets/e2e34113-d944-4a01-a3cd-6c72488b36b7)
-
-**Multi-document validation**
-
-![kubecheck-multidoc](https://github.com/user-attachments/assets/b7fce799-5095-4069-ba44-b474f32ef38b)
-
-**Full Directory Validation**
-
-![kubecheck-dir](https://github.com/user-attachments/assets/9fb39273-c5de-4998-a444-2e9270094f1c)
-
-**Stdin piping validation**
-
-![kubecheck-pipe-stdin](https://github.com/user-attachments/assets/5b7a23e3-6e0f-4493-b679-4a6a5dde3e32)
-
-**Helm Charts + stdin Validation**
-
-![kubecheck-helm](https://github.com/user-attachments/assets/05e76ea6-ca38-4e4e-86d5-f5db7616b7f6)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <b>Single file — with violations</b><br/>
+      <img src="https://github.com/user-attachments/assets/786fff77-b97a-4f0e-93ed-4dc68457efc5"/>
+    </td>
+    <td align="center" width="50%">
+      <b>Single file — all checks passed</b><br/>
+      <img src="https://github.com/user-attachments/assets/e2e34113-d944-4a01-a3cd-6c72488b36b7"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <b>Multi-document validation</b><br/>
+      <img src="https://github.com/user-attachments/assets/b7fce799-5095-4069-ba44-b474f32ef38b"/>
+    </td>
+    <td align="center" width="50%">
+      <b>Full directory scan</b><br/>
+      <img src="https://github.com/user-attachments/assets/9fb39273-c5de-4998-a444-2e9270094f1c"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <b>Stdin piping</b><br/>
+      <img src="https://github.com/user-attachments/assets/5b7a23e3-6e0f-4493-b679-4a6a5dde3e32"/>
+    </td>
+    <td align="center" width="50%">
+      <b>Helm chart + stdin</b><br/>
+      <img src="https://github.com/user-attachments/assets/05e76ea6-ca38-4e4e-86d5-f5db7616b7f6"/>
+    </td>
+  </tr>
+</table>
 
 ## How It Works
 
