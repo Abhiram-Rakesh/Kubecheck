@@ -1,8 +1,6 @@
-# kubecheck
+# Kubecheck
 
 **Kubernetes static analysis CLI tool**
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A CLI tool that validates Kubernetes YAML files against production best practices without connecting to a cluster. Designed for CI/CD pipelines, pre-commit hooks, and local developer validation.
 
@@ -203,9 +201,6 @@ $ kubecheck k8s/
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) - How to contribute
 - [docs/EXAMPLES.md](docs/EXAMPLES.md) - Real-world usage examples
 
-## License
-
-MIT — see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
