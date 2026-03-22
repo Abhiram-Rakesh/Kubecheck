@@ -1,35 +1,26 @@
 # kubecheck
 
-**Production-grade Kubernetes static analysis CLI tool**
+**Kubernetes static analysis CLI tool**
 
-A local CLI tool that validates Kubernetes YAML files against production best practices. Designed for CI/CD pipelines, pre-commit hooks, and local developer validation.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## Overview
+A CLI tool that validates Kubernetes YAML files against production best practices without connecting to a cluster. Designed for CI/CD pipelines, pre-commit hooks, and local developer validation.
 
-`kubecheck` is a static analysis tool that validates Kubernetes manifests without connecting to a cluster. Built with Go and featuring a YAML-configurable rule system for maximum flexibility.
+## How It Works
 
-## Architecture
+kubecheck parses YAML manifests, extracts container specs from supported resource types, and evaluates each container against a configurable set of rules. Violations are reported with severity levels and actionable help text.
 
-```
-┌─────────────────────────────────────────┐
-│          kubecheck CLI (Go)             │
-│  - Argument parsing                     │
-│  - File discovery & YAML parsing        │
-│  - Helm template rendering              │
-│  - Orchestration & reporting            │
-│  - YAML-configurable rule engine        │
-└─────────────────────────────────────────┘
-```
+**Supported resource types:** Deployment, StatefulSet, DaemonSet, ReplicaSet, Job, CronJob, Pod
 
 ## Features
 
 ### Input Support
 
-- ✅ Single Kubernetes YAML files
-- ✅ Directories (recursive scanning)
-- ✅ Multi-document YAML files (`---` separated)
-- ✅ Helm charts (via `helm template`)
-- ✅ Stdin piping
+- Single Kubernetes YAML files
+- Directories (recursive scanning)
+- Multi-document YAML files (`---` separated)
+- Helm charts (via `helm template`)
+- Stdin piping
 
 ### YAML-Configurable Rules
 
@@ -44,7 +35,7 @@ rules:
     message: "Container '{container}' uses 'latest' image tag"
 ```
 
-See [CONFIG.md](CONFIG.md) for complete documentation.
+See [docs/CONFIG.md](docs/CONFIG.md) for complete documentation.
 
 ### Default Validation Rules
 
@@ -57,7 +48,7 @@ See [CONFIG.md](CONFIG.md) for complete documentation.
 
 ### Exit Codes
 
-```bash
+```
 0 - OK    (all checks passed)
 1 - WARN  (warnings found)
 2 - ERROR (errors found)
@@ -75,15 +66,13 @@ The CLI exits with the highest severity found, making it CI-friendly.
 ### Install
 
 ```bash
-git clone https://github.com/Abhiram-Rakesh/kubecheck.git
-cd kubecheck
+git clone https://github.com/Abhiram-Rakesh/Kubecheck.git
+cd Kubecheck
 chmod +x *.sh
 ./build.sh
 ```
 
-This installs:
-
-- `kubecheck` binary to `/usr/local/bin`
+This installs the `kubecheck` binary to `/usr/local/bin`.
 
 ### Uninstall
 
@@ -108,7 +97,7 @@ kubecheck ./my-chart/
 # Pipe from stdin
 helm template ./my-chart | kubecheck -
 
-# Verbose output
+# Verbose output (shows which config file was loaded)
 kubecheck -v deployment.yaml
 
 # Use custom config
@@ -117,12 +106,13 @@ kubecheck --config my-rules.yaml deployment.yaml
 
 ### Configuration
 
-kubecheck looks for configuration files in:
+kubecheck looks for configuration files in this order:
 
-1. `./kubecheck.yaml` (current directory)
-2. `./kubecheck.yml` (current directory)
-3. `~/.kubecheck/config.yaml` (home directory)
-4. Built-in defaults (if no config found)
+1. `--config` flag (highest priority)
+2. `./kubecheck.yaml` (current directory)
+3. `./kubecheck.yml` (current directory)
+4. `~/.kubecheck/config.yaml` (home directory)
+5. Built-in defaults (if no config found)
 
 Create a custom config:
 
@@ -139,16 +129,39 @@ rules:
     help: "use images from registry.company.com"
 ```
 
-See [CONFIG.md](CONFIG.md) for complete configuration guide.
+See [docs/CONFIG.md](docs/CONFIG.md) for the complete configuration guide.
+
+### CI/CD Integration
+
+**GitHub Actions:**
+
+```yaml
+- name: Validate Kubernetes manifests
+  run: |
+    git clone https://github.com/Abhiram-Rakesh/Kubecheck.git
+    cd Kubecheck && ./build.sh && cd ..
+    kubecheck k8s/
+```
+
+**GitLab CI:**
+
+```yaml
+validate-manifests:
+  stage: test
+  script:
+    - git clone https://github.com/Abhiram-Rakesh/Kubecheck.git
+    - cd Kubecheck && ./build.sh && cd ..
+    - kubecheck k8s/
+```
 
 ### Examples
 
 **Single file validation:**
 
 ```bash
-$ kubecheck examples/deployment.yaml
+$ kubecheck deployment.yaml
 
-  ● File: examples/deployment.yaml
+  ● File: deployment.yaml
   ┌─ Deployment: nginx-deployment ──────────────────────────┐
   │  ✖  Security Violation
   │     Container 'nginx' uses 'latest' image tag
@@ -166,7 +179,7 @@ $ kubecheck examples/deployment.yaml
 ```bash
 $ kubecheck k8s/
 
-  🔍 Scanning directory: ./k8s/
+  Scanning directory: ./k8s/
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   ✔  k8s/service.yaml ........................... PASSED
@@ -182,27 +195,17 @@ $ kubecheck k8s/
   Status  ➔ FAILED Exit code: 2
 ```
 
-## Contributing
-
-### Adding New Rules
-
-Rules are defined in YAML configuration files. To add new condition types, edit `cmd/kubecheck/rule-engine.go`:
-
-```go
-// Add new condition to checkCondition switch
-case "my_new_condition":
-    return checkMyCondition(container)
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guide.
-
 ## Documentation
 
-- [CONFIG.md](CONFIG.md) - Configuration guide
-- [QUICKSTART.md](QUICKSTART.md) - Get started in 5 minutes
-- [ARCHITECTURE.md](ARCHITECTURE.md) - System design
-- [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute
-- [EXAMPLES.md](EXAMPLES.md) - Real-world usage examples
+- [docs/CONFIG.md](docs/CONFIG.md) - Configuration guide
+- [docs/QUICKSTART.md](docs/QUICKSTART.md) - Get started in 5 minutes
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - System design
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) - How to contribute
+- [docs/EXAMPLES.md](docs/EXAMPLES.md) - Real-world usage examples
+
+## License
+
+MIT — see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
