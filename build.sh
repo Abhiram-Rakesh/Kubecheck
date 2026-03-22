@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🔨 Building kubecheck..."
+echo "Building kubecheck..."
 
 # Colors
 RED='\033[0;31m'
@@ -15,7 +15,7 @@ GO_INSTALL_DIR="/usr/local/go"
 GO_TARBALL="go1.22.1.linux-amd64.tar.gz"
 GO_DOWNLOAD_URL="https://go.dev/dl/${GO_TARBALL}"
 
-echo "📋 Checking prerequisites..."
+echo "Checking prerequisites..."
 
 install_go() {
     echo -e "${YELLOW}⚠ Go not found or version too old. Installing Go...${NC}"
@@ -30,7 +30,7 @@ install_go() {
     export PATH=/usr/local/go/bin:$PATH
 
     if ! command -v go &>/dev/null; then
-        echo -e "${RED}❌ Go installation failed${NC}"
+        echo -e "${RED}Go installation failed${NC}"
         exit 1
     fi
 
@@ -54,7 +54,7 @@ else
 fi
 
 echo ""
-echo "🔧 Building Go CLI..."
+echo "Building Go CLI..."
 cd "$PROJECT_ROOT/cmd/kubecheck"
 
 go mod tidy
@@ -62,7 +62,7 @@ go build -o kubecheck
 echo -e "${GREEN}✓${NC} Go CLI built"
 
 echo ""
-echo "📦 Installing to /usr/local..."
+echo "Installing to /usr/local..."
 
 sudo mkdir -p /usr/local/bin
 sudo mkdir -p /usr/local/lib/kubecheck
@@ -72,7 +72,7 @@ sudo cp kubecheck /usr/local/bin/kubecheck
 sudo chmod +x /usr/local/bin/kubecheck
 
 echo ""
-echo -e "${GREEN}✅ Installation complete!${NC}"
+echo -e "${GREEN}Installation complete!${NC}"
 echo ""
 echo "Try it out:"
 echo "  kubecheck examples/deployment.yaml"

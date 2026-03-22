@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🗑️  Uninstalling kubecheck..."
+echo "Uninstalling kubecheck..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -27,4 +27,4 @@ else
 fi
 
 echo ""
-echo -e "${GREEN}✅ Uninstallation complete!${NC}"
+echo -e "${GREEN}Uninstallation complete!${NC}"
