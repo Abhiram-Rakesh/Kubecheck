@@ -36,14 +36,14 @@ kubecheck deployment.yaml
 
 ```
   ● File: deployment.yaml
-  ┌─ Deployment: nginx-deployment ──────────────────────┐
-  │  ✖  Security Violation
-  │     Container 'nginx' uses 'latest' image tag
-  │     ▲─── use a specific version or digest
-  │
-  │  ⚠  Resource Hygiene
-  │     Container 'nginx' missing resource requests
-  └──────────────────────────────────── [ 1 errors | 1 warns ]
+  ┌─ Deployment: nginx-deployment ──────────────────────────────────────┐
+  │  ✖  Security Violation                                              │
+  │     Container 'nginx' uses 'latest' image tag                       │
+  │     ▲─── use a specific version or digest                           │
+  │                                                                     │
+  │  ⚠  Resource Hygiene                                                │
+  │     Container 'nginx' missing resource requests                     │
+  └─────────────────────────────────────────── [ 1 errors | 1 warns ] ┘
 ```
 
 **Exit code:** 2 (ERROR level found)

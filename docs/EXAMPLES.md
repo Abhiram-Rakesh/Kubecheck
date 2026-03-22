@@ -19,14 +19,14 @@ Comprehensive examples of using `kubecheck` in various scenarios.
 $ kubecheck deployment.yaml
 
   ● File: deployment.yaml
-  ┌─ Deployment: nginx-deployment ──────────────────────┐
-  │  ✖  Security Violation
-  │     Container 'nginx' uses 'latest' image tag
-  │     ▲─── use a specific version or digest
-  │
-  │  ⚠  Resource Hygiene
-  │     Container 'nginx' missing resource requests
-  └──────────────────────────────────── [ 1 errors | 1 warns ]
+  ┌─ Deployment: nginx-deployment ──────────────────────────────────────┐
+  │  ✖  Security Violation                                              │
+  │     Container 'nginx' uses 'latest' image tag                       │
+  │     ▲─── use a specific version or digest                           │
+  │                                                                     │
+  │  ⚠  Resource Hygiene                                                │
+  │     Container 'nginx' missing resource requests                     │
+  └─────────────────────────────────────────── [ 1 errors | 1 warns ] ┘
 
   Summary ➔ 1 file checked. 2 violations found.
 ```
@@ -36,7 +36,7 @@ $ kubecheck deployment.yaml
 ```bash
 $ kubecheck k8s/
 
-  🔍 Scanning directory: ./k8s/
+  Scanning directory: ./k8s/
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   ✔  k8s/service.yaml ..................... PASSED
