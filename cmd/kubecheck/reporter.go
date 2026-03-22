@@ -318,7 +318,7 @@ func (r *Reporter) PrintSummary() {
 
 // PrintDirectoryHeader prints the header for directory scanning
 func (r *Reporter) PrintDirectoryHeader(dir string) {
-	fmt.Printf("\n  🔍 Scanning directory: %s\n", dir)
+	fmt.Printf("\n  Scanning directory: %s\n", dir)
 	fmt.Printf("  %s\n\n", strings.Repeat(BoxDivider, 70))
 }
 
