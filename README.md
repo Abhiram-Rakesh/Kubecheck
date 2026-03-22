@@ -4,6 +4,30 @@
 
 A CLI tool that validates Kubernetes YAML files against production best practices without connecting to a cluster. Designed for CI/CD pipelines, pre-commit hooks, and local developer validation.
 
+### Examples
+
+**Single file validation: (with & without errors)**
+
+![kubecheck-ind-bad](https://github.com/user-attachments/assets/786fff77-b97a-4f0e-93ed-4dc68457efc5)
+
+![kubecheck-ind-good](https://github.com/user-attachments/assets/e2e34113-d944-4a01-a3cd-6c72488b36b7)
+
+**Multi-document validation**
+
+![kubecheck-multidoc](https://github.com/user-attachments/assets/b7fce799-5095-4069-ba44-b474f32ef38b)
+
+**Full Directory Validation**
+
+![kubecheck-dir](https://github.com/user-attachments/assets/9fb39273-c5de-4998-a444-2e9270094f1c)
+
+**Stdin piping validation**
+
+![kubecheck-pipe-stdin](https://github.com/user-attachments/assets/5b7a23e3-6e0f-4493-b679-4a6a5dde3e32)
+
+**Helm Charts + stdin Validation**
+
+![kubecheck-helm](https://github.com/user-attachments/assets/05e76ea6-ca38-4e4e-86d5-f5db7616b7f6)
+
 ## How It Works
 
 kubecheck parses YAML manifests, extracts container specs from supported resource types, and evaluates each container against a configurable set of rules. Violations are reported with severity levels and actionable help text.
@@ -155,47 +179,6 @@ validate-manifests:
     - git clone https://github.com/Abhiram-Rakesh/Kubecheck.git
     - cd Kubecheck && ./build.sh && cd ..
     - kubecheck k8s/
-```
-
-### Examples
-
-**Single file validation:**
-
-```bash
-$ kubecheck deployment.yaml
-
-  ● File: deployment.yaml
-  ┌─ Deployment: nginx-deployment ──────────────────────────────────────┐
-  │  ✖  Security Violation                                              │
-  │     Container 'nginx' uses 'latest' image tag                       │
-  │     ▲─── use a specific version or digest                           │
-  │                                                                     │
-  │  ⚠  Resource Hygiene                                                │
-  │     Container 'nginx' missing resource requests/limits              │
-  └─────────────────────────────────────────── [ 1 errors | 1 warns ] ┘
-
-  Summary ➔ 1 file checked. 2 violations found.
-```
-
-**Directory validation:**
-
-```bash
-$ kubecheck k8s/
-
-  Scanning directory: ./k8s/
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  ✔  k8s/service.yaml ........................... PASSED
-  ⚠  k8s/deployment.yaml ........................ 1 WARN
-     └─ [api-server] Container 'api' missing resource limits
-  ✖  k8s/cronjob.yaml ........................... 1 ERR
-     └─ [backup] Container 'backup' uses 'latest' image tag
-
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  Summary ➔ 3 files checked
-  Result  ➔ 1 OK  |  1 Warning  |  1 Error
-  Status  ➔ FAILED Exit code: 2
 ```
 
 ## Documentation
