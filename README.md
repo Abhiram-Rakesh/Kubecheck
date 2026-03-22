@@ -60,12 +60,13 @@ The CLI exits with the highest severity found, making it CI-friendly.
 
 ## Installation
 
-### Prerequisites
+### Pre-built Binary (Recommended)
 
-- Go ≥ 1.21
-- Helm (optional, for Helm chart validation)
+Download the latest binary for your platform from the [Releases page](https://github.com/Abhiram-Rakesh/Kubecheck/releases) and place it in your `PATH`.
 
-### Install
+### Build from Source
+
+**Prerequisites:** Go ≥ 1.21, Helm (optional)
 
 ```bash
 git clone https://github.com/Abhiram-Rakesh/Kubecheck.git
@@ -204,7 +205,6 @@ $ kubecheck k8s/
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - System design
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) - How to contribute
 - [docs/EXAMPLES.md](docs/EXAMPLES.md) - Real-world usage examples
-
 
 ## Acknowledgments
 
