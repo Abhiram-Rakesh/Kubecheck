@@ -84,6 +84,14 @@ func (re *RuleEngine) checkCondition(condition string, container Container) bool
 		return runAsNonRootFalse(container)
 	case "run_as_user_zero":
 		return runAsUserZero(container)
+	case "missing_liveness_probe":
+		return missingLivenessProbe(container)
+	case "missing_readiness_probe":
+		return missingReadinessProbe(container)
+	case "privileged_true":
+		return privilegedTrue(container)
+	case "missing_image_pull_policy":
+		return missingImagePullPolicy(container)
 	default:
 		return false
 	}
@@ -95,6 +103,9 @@ type Container struct {
 	Image           string
 	Resources       *Resources
 	SecurityContext *SecurityContext
+	LivenessProbe   bool
+	ReadinessProbe  bool
+	ImagePullPolicy string
 }
 
 // Resources represents resource requirements
@@ -113,6 +124,7 @@ type ResourceSpec struct {
 type SecurityContext struct {
 	RunAsNonRoot *bool
 	RunAsUser    *int
+	Privileged   *bool
 }
 
 // Condition evaluation functions
@@ -154,6 +166,22 @@ func runAsNonRootFalse(c Container) bool {
 
 func runAsUserZero(c Container) bool {
 	return c.SecurityContext != nil && c.SecurityContext.RunAsUser != nil && *c.SecurityContext.RunAsUser == 0
+}
+
+func missingLivenessProbe(c Container) bool {
+	return !c.LivenessProbe
+}
+
+func missingReadinessProbe(c Container) bool {
+	return !c.ReadinessProbe
+}
+
+func privilegedTrue(c Container) bool {
+	return c.SecurityContext != nil && c.SecurityContext.Privileged != nil && *c.SecurityContext.Privileged
+}
+
+func missingImagePullPolicy(c Container) bool {
+	return c.ImagePullPolicy == ""
 }
 
 // extractContainersFromResource extracts containers from a K8s resource
@@ -209,6 +237,19 @@ func parseContainers(containerList []interface{}) []Container {
 			container.SecurityContext = parseSecurityContext(securityMap)
 		}
 
+		// Parse liveness probe
+		if _, ok := containerMap["livenessProbe"]; ok {
+			container.LivenessProbe = true
+		}
+
+		// Parse readiness probe
+		if _, ok := containerMap["readinessProbe"]; ok {
+			container.ReadinessProbe = true
+		}
+
+		// Parse image pull policy
+		container.ImagePullPolicy = getStringValue(containerMap, "imagePullPolicy")
+
 		containers = append(containers, container)
 	}
 
@@ -246,6 +287,10 @@ func parseSecurityContext(securityMap map[string]interface{}) *SecurityContext {
 
 	if runAsUser, ok := securityMap["runAsUser"].(int); ok {
 		sc.RunAsUser = &runAsUser
+	}
+
+	if privileged, ok := securityMap["privileged"].(bool); ok {
+		sc.Privileged = &privileged
 	}
 
 	return sc
