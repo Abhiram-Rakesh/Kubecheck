@@ -21,8 +21,17 @@ rules:
       - missing_security_context
       - run_as_non_root_false
       - run_as_user_zero
-    message: "Container '{container}' may run as root"
+    message: "Container '{container}' running as root or missing securityContext"
     help: "set runAsNonRoot: true and runAsUser to non-zero value"
+
+  - name: no-privileged-containers
+    description: Containers must not run in privileged mode
+    severity: ERROR
+    type: security
+    conditions:
+      - privileged_true
+    message: "Container '{container}' is running in privileged mode"
+    help: "set securityContext.privileged: false or remove the field"
 
   # Resource Management Rules
   - name: require-resource-requests
@@ -44,3 +53,31 @@ rules:
       - missing_memory_limits
     message: "Container '{container}' missing resource limits"
     help: "set resources.limits.cpu and resources.limits.memory"
+
+  # Reliability Rules
+  - name: require-liveness-probe
+    description: Containers should define a liveness probe
+    severity: WARN
+    type: reliability
+    conditions:
+      - missing_liveness_probe
+    message: "Container '{container}' is missing a liveness probe"
+    help: "add a livenessProbe to detect and restart unhealthy containers"
+
+  - name: require-readiness-probe
+    description: Containers should define a readiness probe
+    severity: WARN
+    type: reliability
+    conditions:
+      - missing_readiness_probe
+    message: "Container '{container}' is missing a readiness probe"
+    help: "add a readinessProbe to prevent traffic reaching unready containers"
+
+  - name: require-image-pull-policy
+    description: Containers should explicitly set imagePullPolicy
+    severity: WARN
+    type: image
+    conditions:
+      - missing_image_pull_policy
+    message: "Container '{container}' does not set imagePullPolicy"
+    help: "set imagePullPolicy to Always, IfNotPresent, or Never"
