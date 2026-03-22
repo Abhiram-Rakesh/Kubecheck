@@ -1,4 +1,4 @@
-# Project Summary: kubecheck
+# Project Summary: Kubecheck
 
 **Production-Grade Kubernetes Static Analysis CLI Tool**
 

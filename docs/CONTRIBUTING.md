@@ -1,4 +1,4 @@
-# Contributing to kubecheck
+# Contributing to Kubecheck
 
 Thank you for your interest in contributing! This guide will help you get started.
 
@@ -341,7 +341,7 @@ kubecheck --config test-config.yaml -v deployment.yaml
 
 ---
 
-**Thank you for contributing to kubecheck!**
+**Thank you for contributing to Kubecheck!**
 
 ### Quick Reference
 
